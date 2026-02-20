@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Jadon's Portfolio</title>
+    <title>Notebooks — Jadon</title>
     <link rel="stylesheet" href="./css/bootstrap.min.css" />
     <link rel="stylesheet" href="./css/unicons.css" />
     <link rel="stylesheet" href="./css/tooplate-style.css" />
@@ -32,41 +32,40 @@
         </button>
         <div class="collapse navbar-collapse" id="nav">
           <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="./index.html">Home</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="./projects.html">Projects</a>
-            </li>
-            <!-- <li class="nav-item">
-              <a class="nav-link" href="./notebooks.html">Notebooks</a>
-            </li> -->
+            <li class="nav-item"><a class="nav-link" href="./index.html">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="./projects.html">Projects</a></li>
+            <!-- <li class="nav-item"><a class="nav-link" href="./notebooks.html">Notebooks</a></li> -->
           </ul>
         </div>
       </div>
     </nav>
 
     <main class="container">
-      <section class="hero text-center">
-        <h1 class="display-5 fw-bold text-white">Hi, I'm Jadon</h1>
-        <p class="lead mt-3 mx-auto" style="max-width: 680px;">
-          Data-driven problem solver blending statistics, machine learning, and clean engineering.
-          Explore my projects and notebooks below.
-        </p>
-        <div class="mt-4 d-flex justify-content-center" style="gap: var(--space-1);">
-          <a class="btn btn-accent" href="./projects.html">View Projects</a>
-          <a class="btn btn-outline-light" href="./notebooks.html">Notebooks</a>
-        </div>
-        <div class="mt-5 d-flex justify-content-center" style="gap: var(--space-1);">
-          <a class="btn btn-outline-light" target="_blank" href="https://github.com/crxxom?tab=repositories">
-            <i class="uil uil-github"></i> GitHub
-          </a>
-          <a class="btn btn-outline-light" target="_blank" href="https://www.kaggle.com/crxxom">
-            <i class="uil uil-brackets-curly"></i> Kaggle
-          </a>
-          <a class="btn btn-outline-light" target="_blank" href="https://www.linkedin.com/in/jadon-ng-848a48263/">
-            <i class="uil uil-linkedin"></i> LinkedIn
-          </a>
+      <section class="hero section">
+        <h2 class="fw-semibold mb-4">Notebooks</h2>
+        <p class="text-secondary mb-4">Dashboards and interactive models will be added here.</p>
+        <div class="row g-5">
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 p-3 d-flex flex-column">
+              <h5 class="card-title">GARCH Model</h5>
+              <p class="card-text">Volatility modeling demo with interactive controls.</p>
+              <a class="btn btn-accent mt-auto" href="./notebooks/garch.html">Open</a>
+            </div>
+          </div>
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 p-3 d-flex flex-column">
+              <h5 class="card-title">GLM</h5>
+              <p class="card-text">Generalized linear model demo.</p>
+              <a class="btn btn-accent mt-auto disabled" href="#" tabindex="-1" aria-disabled="true">Coming soon</a>
+            </div>
+          </div>
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 p-3 d-flex flex-column">
+              <h5 class="card-title">Linear Regression</h5>
+              <p class="card-text">OLS diagnostics demo.</p>
+              <a class="btn btn-accent mt-auto disabled" href="#" tabindex="-1" aria-disabled="true">Coming soon</a>
+            </div>
+          </div>
         </div>
       </section>
     </main>
@@ -85,4 +84,4 @@
     <script src="./js/jquery-3.3.1.min.js"></script>
     <script src="./js/bootstrap.min.js"></script>
   </body>
-</html>
+  </html>
