@@ -1,0 +1,1045 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Newton-Raphson Method - Complete Explanation</title>
+    <link rel="stylesheet" href="../css/bootstrap.min.css" />
+    <link rel="stylesheet" href="../css/unicons.css" />
+    <link rel="stylesheet" href="../css/tooplate-style.css" />
+    <!-- MathJax for LaTeX rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" defer></script>
+    <!-- Plotly for interactive graphs -->
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <!-- Prism.js for code syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    
+    <style>
+      :root { 
+        --accent: #0ea5e9; 
+        --space-1: .75rem; 
+        --space-2: 1.25rem; 
+        --space-3: 2rem; 
+        --code-bg: #1e1e2e;
+      }
+      body { 
+        background: #0b0f19; 
+        color: #e5e7eb; 
+        line-height: 1.6;
+      }
+      .navbar { 
+        background: rgba(15, 23, 42, 0.7); 
+        backdrop-filter: blur(8px); 
+      }
+      .nav-link, .navbar-brand { 
+        color: #e5e7eb !important; 
+      }
+      .nav-link:hover { 
+        color: var(--accent) !important; 
+      }
+      .btn-accent { 
+        background: var(--accent); 
+        color: #081018; 
+        border: 0; 
+      }
+      .btn-accent:hover { 
+        background: #0284c7; 
+        color: #e5e7eb; 
+      }
+      .btn { 
+        padding: 0.6rem 1.1rem; 
+      }
+      .btn + .btn { 
+        margin-left: var(--space-1); 
+      }
+      .hero { 
+        padding: 7rem 0 2rem; 
+      }
+      .section { 
+        padding: 2rem 0; 
+      }
+      .card { 
+        background: #0f172a; 
+        border: 1px solid #1f2937; 
+        margin-bottom: 1.5rem;
+        border-radius: 0.75rem;
+      }
+      .card-header {
+        background: #1e293b;
+        border-bottom: 1px solid #334155;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        border-radius: 0.75rem 0.75rem 0 0 !important;
+      }
+      a { 
+        text-decoration: none; 
+      }
+      h1, h2, h3, h4, h5, h6 {
+        color: #ffffff;
+      }
+      .math-block {
+        font-size: 1.2rem;
+        padding: 1.5rem;
+        background: #1a1f2e;
+        border-radius: 0.5rem;
+        text-align: center;
+        border-left: 4px solid var(--accent);
+        margin: 1.5rem 0;
+        overflow-x: auto;
+      }
+      .code-block {
+        background: var(--code-bg);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin: 1rem 0;
+        border: 1px solid #2d2d3a;
+        overflow-x: auto;
+      }
+      .code-block pre {
+        margin: 0;
+        color: #e5e7eb;
+        font-family: 'Fira Code', monospace;
+        font-size: 0.9rem;
+      }
+      .plot-container {
+        width: 100%;
+        height: 400px;
+        margin: 1.5rem 0;
+        background: #0f172a;
+        border-radius: 0.5rem;
+      }
+      .insight-card {
+        background: #1e293b;
+        border-left: 4px solid var(--accent);
+        padding: 1rem 1.5rem;
+        margin: 1rem 0;
+        border-radius: 0.5rem;
+      }
+      .katex { 
+        font-size: 1.1em; 
+      }
+      .katex-display {
+        margin: 0.5em 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+      .iteration-table {
+        background: #1a1f2e;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin: 1rem 0;
+      }
+      .iteration-table table {
+        width: 100%;
+        color: #e5e7eb;
+        border-collapse: collapse;
+      }
+      .iteration-table th {
+        color: var(--accent);
+        font-weight: 600;
+        padding: 0.75rem 0.5rem;
+        border-bottom: 1px solid #334155;
+        text-align: left;
+      }
+      .iteration-table td {
+        padding: 0.5rem;
+        border-bottom: 1px solid #1f2937;
+      }
+      .iteration-table tr:hover {
+        background: #2d3a4f;
+      }
+      .note {
+        color: #9ca3af;
+        font-style: italic;
+        margin-top: 0.5rem;
+      }
+      .function-example {
+        background: #1a1f2e;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-left: 4px solid var(--accent);
+      }
+      .vis-title {
+        color: var(--accent);
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+      }
+       p, li, .card-body, .insight-card p, .comparison-table td, .note {
+    color: #ffffff;
+}
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg fixed-top">
+      <div class="container">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="nav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="../projects.html">Projects</a></li>
+            <li class="nav-item"><a class="nav-link" href="../notebooks.html">Notebooks</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container">
+      <section class="hero">
+        <h1 class="fw-bold mb-4">Newton-Raphson Method</h1>
+        <p class="lead mb-5" style="color: #9ca3af;">
+          An iterative optimization algorithm for finding roots of functions and solving optimization problems.
+          Derived from Taylor series expansion, it uses both gradient and curvature information for rapid convergence.
+        </p>
+      </section>
+
+      <!-- Introduction Section -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Introduction</h3>
+          </div>
+          <div class="card-body">
+            <p>The Newton-Raphson method belongs to the family of iterative optimization algorithms. It can be used to find roots of equations or to optimize functions by finding points where the derivative equals zero.</p>
+            
+            <div class="insight-card">
+              <strong>Root Finding Formula:</strong>
+              <div class="math-block">
+                \[x_{k+1} = x_k - \frac{g(x)}{g'(x)}\]
+              </div>
+              <p class="mt-2 mb-0">This finds \(x\) such that \(g(x) = 0\).</p>
+            </div>
+            
+            <div class="insight-card mt-3">
+              <strong>Optimization Formula:</strong>
+              <div class="math-block">
+                \[x_{k+1} = x_k - H(x_k)^{-1}\nabla f(x_k)\]
+              </div>
+              <p class="mt-2 mb-0">This finds \(x\) such that \(f'(x) = 0\) (critical points).</p>
+            </div>
+            
+            <p class="mt-3">But how is this derived? What is the intuition behind the algorithm? Let's explore with an example.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Visualizing the Function Section -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Visualizing the Example Function</h3>
+          </div>
+          <div class="card-body">
+            <p>Consider the cubic function:</p>
+            <div class="math-block">
+              \[f(x) = x^3 + 3x^2 + 100\]
+            </div>
+            
+            <div class="vis-title">Function Plot</div>
+            <div id="function-plot" class="plot-container"></div>
+            
+            <p class="mt-3">We start with an initial point \(x_k = 7.5\). The idea is to iteratively move our point closer to the critical point where \(f'(x) = 0\).</p>
+            
+            <p>A simple approach would be gradient descent with a fixed learning rate:</p>
+            <div class="math-block">
+              \[x_{k+1} = x_k - \alpha \nabla f(x_k)\]
+            </div>
+            
+            <p>But can we do better by incorporating curvature information?</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Taylor Series Visualization -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Taylor Series Approximation</h3>
+          </div>
+          <div class="card-body">
+            <p>Instead of just first-order, we use second-order Taylor expansion to include curvature:</p>
+            
+            <div class="math-block">
+              \[f(x) \approx f(x_k) + f'(x_k)(x - x_k) + \frac{1}{2}f''(x_k)(x - x_k)^2\]
+            </div>
+            
+            <div class="vis-title">First-order vs Second-order Taylor Approximation at x = 7.5</div>
+            <div id="taylor-plot" class="plot-container"></div>
+            
+            <p class="mt-3">Notice that the second-order approximation captures the curvature and has its own critical point that we can solve for analytically.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Derivation Section -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Derivation of Newton-Raphson</h3>
+          </div>
+          <div class="card-body">
+            <p>To find the critical point of the second-order approximation, we take the derivative and set it to zero:</p>
+            
+            <div class="math-block">
+              \[\frac{d}{dx}\left[f(x_k) + f'(x_k)(x - x_k) + \frac{1}{2}f''(x_k)(x - x_k)^2\right] = 0\]
+            </div>
+            
+            <p>This gives us:</p>
+            
+            <div class="math-block">
+              \[0 = f'(x_k) + f''(x_k)(x - x_k)\]
+            </div>
+            
+            <p>Solving for \(x\):</p>
+            
+            <div class="math-block">
+              \[x = x_k - \frac{f'(x_k)}{f''(x_k)}\]
+            </div>
+            
+            <div class="insight-card">
+              <p class="mb-0">This is exactly the Newton-Raphson update formula! The method uses both the gradient \(f'(x_k)\) and the curvature \(f''(x_k)\) to determine both direction and optimal step size.</p>
+            </div>
+            
+            <div class="vis-title">Newton Step Visualization</div>
+            <div id="newton-step-plot" class="plot-container"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Python Implementation Section -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Python Implementation</h3>
+          </div>
+          <div class="card-body">
+            <p>Here's a complete implementation of the Newton-Raphson method with verbose output and convergence tracking:</p>
+            
+            <div class="code-block">
+              <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from typing import Callable, Tuple, Optional, List
+
+def newton_raphson(
+    f: Callable[[float], float],
+    f_prime: Callable[[float], float],
+    x0: float,
+    tol: float = 1e-10,
+    max_iter: int = 100,
+    verbose: bool = False
+) -> Tuple[float, int, List[float]]:
+    """
+    Newton-Raphson method for finding roots.
+    
+    Parameters:
+    -----------
+    f : function
+        The function whose root we're finding
+    f_prime : function
+        Derivative of f
+    x0 : float
+        Initial guess
+    tol : float
+        Tolerance for stopping (|f(x)| < tol)
+    max_iter : int
+        Maximum iterations
+    verbose : bool
+        Print iterations if True
+    
+    Returns:
+    --------
+    x : float
+        Approximated root
+    iterations : int
+        Number of iterations used
+    history : list
+        History of x values
+    """
+    x = x0
+    history = [x]
+    
+    for i in range(max_iter):
+        fx = f(x)
+        fpx = f_prime(x)
+        
+        if abs(fpx) < 1e-15:
+            raise ValueError(f"Derivative too small at x = {x}")
+        
+        # Newton step
+        x_new = x - fx / fpx
+        history.append(x_new)
+        
+        if verbose:
+            print(f"Iter {i}: x = {x_new:.10f}, f(x) = {f(x_new):.10e}")
+        
+        # Check convergence
+        if abs(f(x_new)) < tol:
+            return x_new, i + 1, history
+        
+        x = x_new
+    
+    print(f"Warning: Maximum iterations ({max_iter}) reached")
+    return x, max_iter, history</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Example 1: Root Finding -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Example 1: Root Finding</h3>
+          </div>
+          <div class="card-body">
+            <p>Find the root of \(f(x) = x^2 - 4\) (solutions are \(x = \pm 2\)):</p>
+            
+            <div class="vis-title">f(x) = x² - 4 and Newton Iterations from x₀ = 3.0</div>
+            
+            
+            <div class="code-block">
+              <pre><code class="language-python">def f1(x):
+    return x**2 - 4
+
+def f1_prime(x):
+    return 2*x
+
+root, iterations, history = newton_raphson(f1, f1_prime, x0=3.0, verbose=True)
+print(f"\nRoot found: {root:.10f}")
+print(f"Iterations: {iterations}")
+print(f"Final error: {abs(f1(root)):.2e}")</code></pre>
+            </div>
+            
+            <div class="iteration-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Iteration</th>
+                    <th>x</th>
+                    <th>f(x)</th>
+                    <th>Step Size</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>0</td>
+                    <td>3.0000000000</td>
+                    <td>5.00e+00</td>
+                    <td>-</td>
+                  </tr>
+                  <tr>
+                    <td>1</td>
+                    <td>2.1666666667</td>
+                    <td>6.94e-01</td>
+                    <td>0.8333</td>
+                  </tr>
+                  <tr>
+                    <td>2</td>
+                    <td>2.0064102564</td>
+                    <td>2.57e-02</td>
+                    <td>0.1603</td>
+                  </tr>
+                  <tr>
+                    <td>3</td>
+                    <td>2.0000102400</td>
+                    <td>4.10e-05</td>
+                    <td>0.0064</td>
+                  </tr>
+                  <tr>
+                    <td>4</td>
+                    <td>2.0000000000</td>
+                    <td>1.05e-10</td>
+                    <td>0.00001</td>
+                  </tr>
+                  <tr>
+                    <td>5</td>
+                    <td>2.0000000000</td>
+                    <td>0.00e+00</td>
+                    <td>0.00000</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="note">
+              <p>✓ Root found: 2.0000000000 in just 5 iterations with quadratic convergence.</p>
+              <p>The step sizes decrease quadratically as we approach the root.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Example 2: Optimization -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Example 2: Optimization (Finding Critical Points)</h3>
+          </div>
+          <div class="card-body">
+            <p>For the original function \(f(x) = x^3 + 3x^2 + 100\), find where \(f'(x) = 0\):</p>
+            
+            <div class="math-block">
+              \[f'(x) = 3x^2 + 6x\]
+              \[f''(x) = 6x + 6\]
+            </div>
+            
+            <div class="vis-title">f'(x) and Newton Iterations from x₀ = 3.0</div>
+            
+            
+            <div class="code-block">
+              <pre><code class="language-python"># For optimization, we find roots of f'(x)
+def f1(x):  # This is f'(x)
+    return 3*x**2 + 6*x
+
+def f1_prime(x):  # This is f''(x)
+    return 6*x + 6
+
+root, iterations, history = newton_raphson(f1, f1_prime, x0=3.0, verbose=True)
+print(f"\nRoot found: {root:.10f}")
+print(f"Iterations: {iterations}")
+print(f"Final error: {abs(f1(root)):.2e}")</code></pre>
+            </div>
+            
+            <div class="iteration-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Iteration</th>
+                    <th>x</th>
+                    <th>f'(x)</th>
+                    <th>f''(x)</th>
+                    <th>Step Size (f'/f'')</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>0</td>
+                    <td>3.0000000000</td>
+                    <td>4.50e+01</td>
+                    <td>2.40e+01</td>
+                    <td>1.8750</td>
+                  </tr>
+                  <tr>
+                    <td>1</td>
+                    <td>1.1250000000</td>
+                    <td>1.05e+01</td>
+                    <td>1.28e+01</td>
+                    <td>0.8272</td>
+                  </tr>
+                  <tr>
+                    <td>2</td>
+                    <td>0.2977941176</td>
+                    <td>2.05e+00</td>
+                    <td>7.79e+00</td>
+                    <td>0.2636</td>
+                  </tr>
+                  <tr>
+                    <td>3</td>
+                    <td>0.0341661806</td>
+                    <td>2.08e-01</td>
+                    <td>6.20e+00</td>
+                    <td>0.0336</td>
+                  </tr>
+                  <tr>
+                    <td>4</td>
+                    <td>0.0005643812</td>
+                    <td>3.39e-03</td>
+                    <td>6.00e+00</td>
+                    <td>0.0006</td>
+                  </tr>
+                  <tr>
+                    <td>5</td>
+                    <td>0.0000001592</td>
+                    <td>9.55e-07</td>
+                    <td>6.00e+00</td>
+                    <td>1.59e-07</td>
+                  </tr>
+                  <tr>
+                    <td>6</td>
+                    <td>0.0000000000</td>
+                    <td>7.60e-14</td>
+                    <td>6.00e+00</td>
+                    <td>1.27e-14</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="note">
+              <p>✓ Critical point found at x = 0 (where f'(x) = 0) in just 6 iterations.</p>
+              <p>Notice how the step size (f'/f'') becomes very small as we approach the root, showing the quadratic convergence.</p>
+              <p class="mt-2">Note that \(f'(x) = 3x^2 + 6x = 3x(x + 2)\) has roots at \(x = 0\) and \(x = -2\). The algorithm found the root at \(x = 0\) because we started at \(x_0 = 3.0\).</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Key Insights Section -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Key Insights</h3>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="insight-card">
+                  <h5>Quadratic Convergence</h5>
+                  <p>Newton-Raphson exhibits quadratic convergence near the root, meaning the number of correct digits roughly doubles each iteration.</p>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="insight-card">
+                  <h5>Uses Curvature Information</h5>
+                  <p>By incorporating the second derivative (Hessian), the method adapts the step size based on the function's local curvature.</p>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="insight-card">
+                  <h5>Initial Guess Matters</h5>
+                  <p>The method can converge to different roots depending on the starting point, as seen in the optimization example.</p>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="insight-card">
+                  <h5>Generalization to Multiple Dimensions</h5>
+                  <p>The formula generalizes to \(x_{k+1} = x_k - H(x_k)^{-1}\nabla f(x_k)\) where \(H\) is the Hessian matrix.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+     
+    </main>
+
+    <footer class="py-4 mt-5" style="color:#9ca3af;border-top:1px solid #1f2937;">
+      <div class="container d-flex justify-content-between align-items-center">
+        <span>© 2026</span>
+        <div class="d-flex" style="gap:.75rem;">
+          <a href="https://github.com/crxxom" target="_blank" class="text-secondary">GitHub</a>
+          <a href="https://www.kaggle.com/crxxom" target="_blank" class="text-secondary">Kaggle</a>
+          <a href="https://www.linkedin.com/in/jadon-ng-848a48263/" target="_blank" class="text-secondary">LinkedIn</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="../js/jquery-3.3.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    
+    <script>
+      // Function to create plots
+      function createPlots() {
+        // Function definitions
+        function f(x) { return Math.pow(x, 3) + 3*Math.pow(x, 2) + 100; }
+        function fPrime(x) { return 3*Math.pow(x, 2) + 6*x; }
+        function fDoublePrime(x) { return 6*x + 6; }
+        
+        // Taylor approximations at x=7.5
+        function taylor1(x) {
+          const xk = 7.5;
+          return f(xk) + fPrime(xk)*(x - xk);
+        }
+        
+        function taylor2(x) {
+          const xk = 7.5;
+          return f(xk) + fPrime(xk)*(x - xk) + 0.5*fDoublePrime(xk)*Math.pow(x - xk, 2);
+        }
+        
+        // Generate x values
+        const xVals = [];
+        for (let i = -10; i <= 10; i += 0.1) {
+          xVals.push(i);
+        }
+        
+        const xTaylor = [];
+        for (let i = 2.5; i <= 10; i += 0.1) {
+          xTaylor.push(i);
+        }
+        
+        // 1. Function plot
+        Plotly.newPlot('function-plot', [{
+          x: xVals,
+          y: xVals.map(f),
+          type: 'scatter',
+          mode: 'lines',
+          line: {color: '#0ea5e9', width: 3},
+          name: 'f(x) = x³ + 3x² + 100'
+        }, {
+          x: [7.5],
+          y: [f(7.5)],
+          type: 'scatter',
+          mode: 'markers',
+          marker: {color: '#ef4444', size: 10, symbol: 'circle'},
+          name: 'Initial point x₀ = 7.5'
+        }], {
+          title: 'Function f(x) = x³ + 3x² + 100',
+          xaxis: {title: 'x', color: '#9ca3af'},
+          yaxis: {title: 'f(x)', color: '#9ca3af'},
+          paper_bgcolor: '#0f172a',
+          plot_bgcolor: '#0f172a',
+          font: {color: '#e5e7eb'},
+          showlegend: true,
+          legend: {font: {color: '#e5e7eb'}}
+        });
+        
+        // 2. Taylor approximation plot
+        Plotly.newPlot('taylor-plot', [{
+          x: xVals,
+          y: xVals.map(f),
+          type: 'scatter',
+          mode: 'lines',
+          line: {color: '#0ea5e9', width: 2},
+          name: 'f(x)'
+        }, {
+          x: xTaylor,
+          y: xTaylor.map(taylor1),
+          type: 'scatter',
+          mode: 'lines',
+          line: {color: '#f97316', width: 2, dash: 'dash'},
+          name: 'First-order Taylor'
+        }, {
+          x: xTaylor,
+          y: xTaylor.map(taylor2),
+          type: 'scatter',
+          mode: 'lines',
+          line: {color: '#10b981', width: 2},
+          name: 'Second-order Taylor'
+        }, {
+          x: [7.5],
+          y: [f(7.5)],
+          type: 'scatter',
+          mode: 'markers',
+          marker: {color: '#ef4444', size: 10},
+          name: 'x₀ = 7.5'
+        }], {
+          title: 'Taylor Series Approximations at x = 7.5',
+          xaxis: {title: 'x', color: '#9ca3af'},
+          yaxis: {title: 'y', color: '#9ca3af'},
+          paper_bgcolor: '#0f172a',
+          plot_bgcolor: '#0f172a',
+          font: {color: '#e5e7eb'},
+          showlegend: true,
+          legend: {font: {color: '#e5e7eb'}}
+        });
+        
+        // 3. Newton step visualization
+        const xk = 7.5;
+        const xCrit = xk - fPrime(xk) / fDoublePrime(xk);
+        
+        Plotly.newPlot('newton-step-plot', [{
+          x: xVals,
+          y: xVals.map(f),
+          type: 'scatter',
+          mode: 'lines',
+          line: {color: '#0ea5e9', width: 2},
+          name: 'f(x)'
+        }, {
+          x: xTaylor,
+          y: xTaylor.map(taylor2),
+          type: 'scatter',
+          mode: 'lines',
+          line: {color: '#10b981', width: 2},
+          name: 'Quadratic approximation'
+        }, {
+          x: [xk, xCrit],
+          y: [f(xk), f(xCrit)],
+          type: 'scatter',
+          mode: 'markers+lines',
+          line: {color: '#ef4444', width: 2, dash: 'dot'},
+          marker: {size: [10, 10], color: '#ef4444'},
+          name: 'Newton step'
+        }], {
+          title: `Newton Step: x₀ = 7.5 → x₁ = ${xCrit.toFixed(4)}`,
+          xaxis: {title: 'x', color: '#9ca3af'},
+          yaxis: {title: 'y', color: '#9ca3af'},
+          paper_bgcolor: '#0f172a',
+          plot_bgcolor: '#0f172a',
+          font: {color: '#e5e7eb'},
+          showlegend: true,
+          legend: {font: {color: '#e5e7eb'}}
+        });
+        
+        // 4. Gradient plot
+        Plotly.newPlot('gradient-plot', [{
+          x: xVals,
+          y: xVals.map(fPrime),
+          type: 'scatter',
+          mode: 'lines',
+          line: {color: '#f97316', width: 3},
+          name: "f'(x) = 3x² + 6x"
+        }, {
+          x: [-2, 0],
+          y: [0, 0],
+          type: 'scatter',
+          mode: 'markers',
+          marker: {color: '#ef4444', size: 8},
+          name: 'Critical points'
+        }], {
+          title: "Gradient f'(x) - First Derivative",
+          xaxis: {title: 'x', color: '#9ca3af'},
+          yaxis: {title: "f'(x)", color: '#9ca3af'},
+          paper_bgcolor: '#0f172a',
+          plot_bgcolor: '#0f172a',
+          font: {color: '#e5e7eb'},
+          showlegend: true,
+          legend: {font: {color: '#e5e7eb'}}
+        });
+        
+        // 5. Hessian plot
+        Plotly.newPlot('hessian-plot', [{
+          x: xVals,
+          y: xVals.map(fDoublePrime),
+          type: 'scatter',
+          mode: 'lines',
+          line: {color: '#a78bfa', width: 3},
+          name: "f''(x) = 6x + 6"
+        }, {
+          x: [0],
+          y: [fDoublePrime(0)],
+          type: 'scatter',
+          mode: 'markers',
+          marker: {color: '#ef4444', size: 8},
+          name: 'At critical point x=0'
+        }], {
+          title: "Hessian f''(x) - Second Derivative (Curvature)",
+          xaxis: {title: 'x', color: '#9ca3af'},
+          yaxis: {title: "f''(x)", color: '#9ca3af'},
+          paper_bgcolor: '#0f172a',
+          plot_bgcolor: '#0f172a',
+          font: {color: '#e5e7eb'},
+          showlegend: true,
+          legend: {font: {color: '#e5e7eb'}}
+        });
+        
+        // 6. Root finding example plot
+        function fRoot(x) { return x*x - 4; }
+        const rootHistory = [3.0, 2.1666666667, 2.0064102564, 2.0000102400, 2.0000000000];
+        
+        const traces = [{
+          x: xVals,
+          y: xVals.map(fRoot),
+          type: 'scatter',
+          mode: 'lines',
+          line: {color: '#0ea5e9', width: 2},
+          name: 'f(x) = x² - 4'
+        }];
+        
+        // Add iteration points
+        for (let i = 0; i < rootHistory.length; i++) {
+          traces.push({
+            x: [rootHistory[i]],
+            y: [fRoot(rootHistory[i])],
+            type: 'scatter',
+            mode: 'markers',
+            marker: {size: 10, color: i === 0 ? '#ef4444' : '#10b981'},
+            name: i === 0 ? 'Start' : `Iter ${i}`
+          });
+        }
+        
+        Plotly.newPlot('root-finding-plot', traces, {
+          title: 'Newton-Raphson Root Finding: f(x) = x² - 4',
+          xaxis: {title: 'x', color: '#9ca3af', range: [0, 3.5]},
+          yaxis: {title: 'f(x)', color: '#9ca3af'},
+          paper_bgcolor: '#0f172a',
+          plot_bgcolor: '#0f172a',
+          font: {color: '#e5e7eb'},
+          showlegend: true,
+          legend: {font: {color: '#e5e7eb'}}
+        });
+        
+        // 7. Optimization example plot
+        const optHistory = [3.0, 1.125, 0.2977941176, 0.0341661806, 0.0005643812, 0.0000001592, 0.0];
+        
+        const optTraces = [{
+          x: xVals,
+          y: xVals.map(fPrime),
+          type: 'scatter',
+          mode: 'lines',
+          line: {color: '#f97316', width: 2},
+          name: "f'(x) = 3x² + 6x"
+        }];
+        
+        for (let i = 0; i < optHistory.length; i++) {
+          optTraces.push({
+            x: [optHistory[i]],
+            y: [fPrime(optHistory[i])],
+            type: 'scatter',
+            mode: 'markers',
+            marker: {size: 10, color: i === 0 ? '#ef4444' : '#10b981'},
+            name: i === 0 ? 'Start' : `Iter ${i}`
+          });
+        }
+        
+        Plotly.newPlot('optimization-plot', optTraces, {
+          title: "Newton-Raphson Optimization: Finding roots of f'(x)",
+          xaxis: {title: 'x', color: '#9ca3af', range: [-1, 3.5]},
+          yaxis: {title: "f'(x)", color: '#9ca3af'},
+          paper_bgcolor: '#0f172a',
+          plot_bgcolor: '#0f172a',
+          font: {color: '#e5e7eb'},
+          showlegend: true,
+          legend: {font: {color: '#e5e7eb'}}
+        });
+      }
+      
+      // Simple function evaluator (use with caution - this uses eval)
+      function safeEval(expr, x) {
+        try {
+          // Replace 'x' with the actual value
+          const func = new Function('x', `return ${expr}`);
+          return func(x);
+        } catch (e) {
+          throw new Error(`Error evaluating expression: ${e.message}`);
+        }
+      }
+
+      // Run on load
+      window.onload = function() {
+        createPlots();
+      };
+
+      document.getElementById('run-nr').addEventListener('click', function() {
+        const funcExpr = document.getElementById('func-input').value;
+        const derivExpr = document.getElementById('deriv-input').value;
+        let x0 = parseFloat(document.getElementById('x0-input').value);
+        
+        const resultsDiv = document.getElementById('nr-results');
+        const errorDiv = document.getElementById('nr-error');
+        
+        // Clear previous results
+        resultsDiv.style.display = 'none';
+        errorDiv.style.display = 'none';
+        
+        // Validate inputs
+        if (isNaN(x0)) {
+          errorDiv.textContent = 'Please enter a valid number for x₀';
+          errorDiv.style.display = 'block';
+          return;
+        }
+        
+        try {
+          // Generate x values for plotting
+          const xVals = [];
+          const range = Math.max(5, Math.abs(x0) + 2);
+          for (let i = -range; i <= range; i += range/50) {
+            xVals.push(i);
+          }
+          
+          // Run Newton-Raphson
+          const maxIter = 20;
+          const tol = 1e-10;
+          
+          let x = x0;
+          let history = [];
+          let iterations = 0;
+          
+          for (let i = 0; i < maxIter; i++) {
+            let fx = safeEval(funcExpr, x);
+            let fpx = safeEval(derivExpr, x);
+            
+            if (Math.abs(fpx) < 1e-15) {
+              throw new Error(`Derivative too small at x = ${x}`);
+            }
+            
+            let xNew = x - fx / fpx;
+            let fxNew = safeEval(funcExpr, xNew);
+            
+            history.push({
+              iter: i,
+              x: x,
+              fx: fx,
+              xNew: xNew,
+              fxNew: fxNew
+            });
+            
+            if (Math.abs(fxNew) < tol) {
+              x = xNew;
+              iterations = i + 1;
+              break;
+            }
+            
+            x = xNew;
+            iterations = i + 1;
+          }
+          
+          // Create interactive plot
+          const traces = [{
+            x: xVals,
+            y: xVals.map(v => safeEval(funcExpr, v)),
+            type: 'scatter',
+            mode: 'lines',
+            line: {color: '#0ea5e9', width: 2},
+            name: 'f(x)'
+          }];
+          
+          // Add iteration points
+          for (let i = 0; i < history.length; i++) {
+            traces.push({
+              x: [history[i].x],
+              y: [history[i].fx],
+              type: 'scatter',
+              mode: 'markers',
+              marker: {size: 10, color: i === 0 ? '#ef4444' : '#10b981'},
+              name: i === 0 ? 'Start' : `Iter ${i}`
+            });
+          }
+          
+          // Add final point
+          traces.push({
+            x: [x],
+            y: [safeEval(funcExpr, x)],
+            type: 'scatter',
+            mode: 'markers',
+            marker: {size: 12, color: '#f97316', symbol: 'star'},
+            name: 'Root'
+          });
+          
+          Plotly.newPlot('interactive-plot', traces, {
+            title: `Newton-Raphson Iterations from x₀ = ${x0}`,
+            xaxis: {title: 'x', color: '#9ca3af'},
+            yaxis: {title: 'f(x)', color: '#9ca3af'},
+            paper_bgcolor: '#0f172a',
+            plot_bgcolor: '#0f172a',
+            font: {color: '#e5e7eb'},
+            showlegend: true,
+            legend: {font: {color: '#e5e7eb'}}
+          });
+          
+          // Display results
+          let tableHtml = '<table><thead><tr><th>Iter</th><th>x</th><th>f(x)</th><th>x_new</th><th>f(x_new)</th></tr></thead><tbody>';
+          
+          for (let h of history) {
+            tableHtml += `<tr>
+              <td>${h.iter}</td>
+              <td>${h.x.toFixed(10)}</td>
+              <td>${h.fx.toExponential(4)}</td>
+              <td>${h.xNew.toFixed(10)}</td>
+              <td>${h.fxNew.toExponential(4)}</td>
+            </tr>`;
+          }
+          
+          tableHtml += '</tbody></table>';
+          document.getElementById('nr-iteration-table').innerHTML = tableHtml;
+          
+          let summary = `<strong>Root found:</strong> x = ${x.toFixed(10)}<br>`;
+          summary += `<strong>Iterations:</strong> ${iterations}<br>`;
+          summary += `<strong>Final error:</strong> ${Math.abs(safeEval(funcExpr, x)).toExponential(4)}`;
+          
+          document.getElementById('nr-summary').innerHTML = summary;
+          resultsDiv.style.display = 'block';
+          
+        } catch (e) {
+          errorDiv.textContent = e.message;
+          errorDiv.style.display = 'block';
+        }
+      });
+    </script>
+  </body>
+</html>

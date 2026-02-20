@@ -26,7 +26,7 @@
   <body>
     <nav class="navbar navbar-expand-lg fixed-top">
       <div class="container">
-        <a class="navbar-brand" href="./index.html">crxxom</a>
+        <!-- <a class="navbar-brand" href="./index.html">crxxom</a> -->
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -42,28 +42,35 @@
 
     <main class="container">
       <section class="hero section">
-        <h2 class="fw-semibold mb-4">Notebooks</h2>
-        <p class="text-secondary mb-4">Dashboards and interactive models will be added here.</p>
+        <h2 class="fw-semibold mb-4 text-white">Notebooks</h2>
+        <p class="text-secondary mb-4">Interactive Implementation of notebooks I written <a href="https://github.com/crxxom/models">here</a></p>
         <div class="row g-5">
-          <div class="col-12 col-md-6 col-lg-4">
+          <div class="col-12 col-md-6 col-lg-4 mb-4">
             <div class="card h-100 p-3 d-flex flex-column">
               <h5 class="card-title">GARCH Model</h5>
-              <p class="card-text">Volatility modeling demo with interactive controls.</p>
+              <p class="card-text">Volatility modeling demo with interactive controls</p>
               <a class="btn btn-accent mt-auto" href="./notebooks/garch.html">Open</a>
             </div>
           </div>
-          <div class="col-12 col-md-6 col-lg-4">
+          <div class="col-12 col-md-6 col-lg-4 mb-4">
             <div class="card h-100 p-3 d-flex flex-column">
-              <h5 class="card-title">GLM</h5>
-              <p class="card-text">Generalized linear model demo.</p>
-              <a class="btn btn-accent mt-auto disabled" href="#" tabindex="-1" aria-disabled="true">Coming soon</a>
+              <h5 class="card-title">Newton-Raphson</h5>
+              <p class="card-text">Newton-Raphson Iterative Optimization</p>
+              <a class="btn btn-accent mt-auto" href="./notebooks/newton_raphson.html">Open</a>
             </div>
           </div>
-          <div class="col-12 col-md-6 col-lg-4">
+          <div class="col-12 col-md-6 col-lg-4 mb-4">
             <div class="card h-100 p-3 d-flex flex-column">
-              <h5 class="card-title">Linear Regression</h5>
-              <p class="card-text">OLS diagnostics demo.</p>
-              <a class="btn btn-accent mt-auto disabled" href="#" tabindex="-1" aria-disabled="true">Coming soon</a>
+              <h5 class="card-title">GLM</h5>
+              <p class="card-text">Generalized Linear Model explained</p>
+              <a class="btn btn-accent mt-auto" href="./notebooks/glm.html">Open</a>
+            </div>
+          </div>
+          <div class="col-12 col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 p-3 d-flex flex-column">
+              <h5 class="card-title">Kelly Criterion</h5>
+              <p class="card-text">How much fraction of money should you bet?</p>
+              <a class="btn btn-accent mt-auto" href="./notebooks/kelly_criterion.html">Open</a>
             </div>
           </div>
         </div>

@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Generalized Linear Models (GLM) - Complete Explanation</title>
+    <link rel="stylesheet" href="../css/bootstrap.min.css" />
+    <link rel="stylesheet" href="../css/unicons.css" />
+    <link rel="stylesheet" href="../css/tooplate-style.css" />
+    <!-- MathJax for LaTeX rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" defer></script>
+    <!-- Plotly for interactive graphs -->
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    
+    <style>
+      :root { 
+        --accent: #0ea5e9; 
+        --space-1: .75rem; 
+        --space-2: 1.25rem; 
+        --space-3: 2rem; 
+        --code-bg: #1e1e2e;
+      }
+      body { 
+        background: #0b0f19; 
+        color: #e5e7eb; 
+        line-height: 1.6;
+      }
+      .navbar { 
+        background: rgba(15, 23, 42, 0.7); 
+        backdrop-filter: blur(8px); 
+      }
+      .nav-link, .navbar-brand { 
+        color: #e5e7eb !important; 
+      }
+      .nav-link:hover { 
+        color: var(--accent) !important; 
+      }
+      .btn-accent { 
+        background: var(--accent); 
+        color: #081018; 
+        border: 0; 
+      }
+      .btn-accent:hover { 
+        background: #0284c7; 
+        color: #e5e7eb; 
+      }
+      .btn { 
+        padding: 0.6rem 1.1rem; 
+      }
+      .btn + .btn { 
+        margin-left: var(--space-1); 
+      }
+      .hero { 
+        padding: 7rem 0 2rem; 
+      }
+      .section { 
+        padding: 2rem 0; 
+      }
+      .card { 
+        background: #0f172a; 
+        border: 1px solid #1f2937; 
+        margin-bottom: 1.5rem;
+        border-radius: 0.75rem;
+      }
+      .card-header {
+        background: #1e293b;
+        border-bottom: 1px solid #334155;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        border-radius: 0.75rem 0.75rem 0 0 !important;
+      }
+      a { 
+        text-decoration: none; 
+      }
+      h1, h2, h3, h4, h5, h6 {
+        color: #ffffff;
+      }
+      .math-block {
+        font-size: 1.2rem;
+        padding: 1.5rem;
+        background: #1a1f2e;
+        border-radius: 0.5rem;
+        text-align: center;
+        border-left: 4px solid var(--accent);
+        margin: 1.5rem 0;
+        overflow-x: auto;
+      }
+      .insight-card {
+        background: #1e293b;
+        border-left: 4px solid var(--accent);
+        padding: 1rem 1.5rem;
+        margin: 1rem 0;
+        border-radius: 0.5rem;
+      }
+      .katex { 
+        font-size: 1.1em; 
+      }
+      .katex-display {
+        margin: 0.5em 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+      .comparison-table {
+        background: #1a1f2e;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin: 1rem 0;
+      }
+      .comparison-table table {
+        width: 100%;
+        color: #e5e7eb;
+        border-collapse: collapse;
+      }
+      .comparison-table th {
+        color: var(--accent);
+        font-weight: 600;
+        padding: 0.75rem 0.5rem;
+        border-bottom: 1px solid #334155;
+        text-align: left;
+      }
+      .comparison-table td {
+        padding: 0.5rem;
+        border-bottom: 1px solid #1f2937;
+      }
+      .comparison-table tr:hover {
+        background: #2d3a4f;
+      }
+      .plot-container {
+        width: 100%;
+        height: 400px;
+        margin: 1.5rem 0;
+        background: #0f172a;
+        border-radius: 0.5rem;
+      }
+      .note {
+        color: #9ca3af;
+        font-style: italic;
+        margin-top: 0.5rem;
+      }
+
+      p, li, .card-body, .insight-card p, .comparison-table td, .note {
+    color: #ffffff;
+}
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg fixed-top">
+      <div class="container">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="nav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="../projects.html">Projects</a></li>
+            <li class="nav-item"><a class="nav-link" href="../notebooks.html">Notebooks</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container">
+      <section class="hero">
+        <h1 class="fw-bold mb-4">Generalized Linear Models (GLM)</h1>
+        <p class="lead mb-5" style="color: #9ca3af;">
+          An extension of traditional linear regression that allows for non-normal error distributions 
+          through the use of link functions and exponential family distributions.
+        </p>
+      </section>
+
+      <!-- Introduction Section -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Introduction to GLM</h3>
+          </div>
+          <div class="card-body">
+            <p>In Generalized Linear Models, we extend the traditional linear model by relaxing the assumption that the error term must be normally distributed. GLM generalizes linear regression under two key conditions:</p>
+            
+            <ol>
+              <li><strong>Distribution:</strong> \(Y|X\) follows some exponential family distribution</li>
+              <li><strong>Link Function:</strong> A link function maps the conditional expectation to the linear predictor: \(g(\mu) = X^T\beta\)</li>
+            </ol>
+            
+            <p>This framework allows us to model binary outcomes (logistic regression), count data (Poisson regression), and many other types of responses.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Canonical Exponential Family Section -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Canonical Exponential Family</h3>
+          </div>
+          <div class="card-body">
+            <p>A subset of exponential family distributions is called the Canonical exponential family, with probability density function:</p>
+            
+            <div class="math-block">
+              \[f_{\theta}(y) = \exp\left(\frac{y\theta - b(\theta)}{\phi} + c(y, \phi)\right)\]
+            </div>
+            
+            <p>where \(b(\theta)\) is the cumulant generating function. This formulation gives us important relationships:</p>
+            
+            <div class="math-block">
+              \[b'(\theta) = \mu\]
+              \[\mu = g^{-1}(X^T\beta)\]
+              \[\theta = b'^{-1}(g^{-1}(X^T\beta)) = h(X^T\beta)\]
+            </div>
+            
+            <p>The log-likelihood function becomes:</p>
+            
+            <div class="math-block">
+              \[l_n(\beta, \phi;Y,X) = \sum_i \frac{Y_i h(X_i^T\beta) - b(h(X_i^T\beta))}{\phi}\]
+            </div>
+            
+            <div class="insight-card">
+              <p class="mb-0">Notice that \(b\) is a convex function (\(b'' > 0\)), which makes the log-likelihood concave (linear minus convex = concave). This guarantees a unique global maximum.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Optimization Methods Section -->
+<section class="section">
+  <div class="card">
+    <div class="card-header">
+      <h3 class="mb-0">Optimization Methods for GLM</h3>
+    </div>
+    <div class="card-body">
+      <p>Several iterative methods can be used to find the maximum likelihood estimates:</p>
+      
+      <!-- Newton-Raphson -->
+      <div class="insight-card mb-4">
+        <h5>Newton-Raphson</h5>
+        <div class="math-block" style="font-size: 1rem;">
+          \[\beta^{(k+1)} = \beta^{(k)} - H_{l_n}(\beta^{(k)})^{-1}\nabla l_n(\beta^{(k)})\]
+        </div>
+        <p class="mt-2 mb-0"><small>Uses quadratic approximation. Computing the inverse Hessian is expensive.</small></p>
+      </div>
+      
+      <!-- Fisher Scoring -->
+      <div class="insight-card mb-4">
+        <h5>Fisher Scoring</h5>
+        <div class="math-block" style="font-size: 1rem;">
+          \[E_{\theta}[H_{l_n}(\theta)] = -I(\theta)\]
+          \[\beta^{(k+1)} = \beta^{(k)} + I(\beta^{(k)})^{-1}\nabla l_n(\beta^{(k)})\]
+        </div>
+        <p class="mt-2 mb-0"><small>Replaces Hessian with its expectation (Fisher information). For canonical exponential family, Hessian equals Fisher information.</small></p>
+      </div>
+      
+      <!-- IRLS -->
+      <div class="insight-card">
+        <h5>IRLS (Iteratively Reweighted Least Squares)</h5>
+        <div class="math-block" style="font-size: 1rem;">
+          \[\beta^{(k+1)} = (X^TWX)^{-1}X^TW(\tilde{Y} - \tilde{\mu} + X\beta^{k})\]
+        </div>
+        <p class="mt-2 mb-0"><small>Where \(W_i = \frac{h'(X^T\beta)}{g'(\mu)\phi}\). Transforms the problem into weighted least squares at each step.</small></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+      <!-- Logistic Regression Example Section -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Demonstration: Logistic Regression with Logit Link</h3>
+          </div>
+          <div class="card-body">
+            <p>Logistic regression is a special case of GLM where:</p>
+            <ul>
+              <li>The response \(Y\) follows a Bernoulli distribution</li>
+              <li>The link function is the logit function: \(g(\mu) = \log\left(\frac{\mu}{1-\mu}\right) = X^T\beta\)</li>
+              <li>This gives us the familiar sigmoid function: \(\mu = \frac{1}{1 + e^{-X^T\beta}}\)</li>
+            </ul>
+            
+            <div class="plot-container" id="sigmoid-plot"></div>
+            
+            <div class="insight-card">
+              <h5>IRLS for Logistic Regression</h5>
+              <p>For logistic regression, the IRLS updates have a particularly elegant form:</p>
+              <div class="math-block">
+                \[W_i = p_i(1-p_i)\]
+                \[z_i = \eta_i + \frac{Y_i - p_i}{p_i(1-p_i)}\]
+                \[\beta^{(k+1)} = (X^T W X)^{-1} X^T W z\]
+              </div>
+              <p class="mb-0">Where \(p_i = \frac{1}{1 + e^{-\eta_i}}\) and \(\eta_i = X_i^T\beta^{(k)}\).</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+
+    </main>
+
+    <footer class="py-4 mt-5" style="color:#9ca3af;border-top:1px solid #1f2937;">
+      <div class="container d-flex justify-content-between align-items-center">
+        <span>© 2026</span>
+        <div class="d-flex" style="gap:.75rem;">
+          <a href="https://github.com/crxxom" target="_blank" class="text-secondary">GitHub</a>
+          <a href="https://www.kaggle.com/crxxom" target="_blank" class="text-secondary">Kaggle</a>
+          <a href="https://www.linkedin.com/in/jadon-ng-848a48263/" target="_blank" class="text-secondary">LinkedIn</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="../js/jquery-3.3.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    
+    <script>
+      // Sigmoid function plot
+      function plotSigmoid() {
+        const xVals = [];
+        for (let i = -8; i <= 8; i += 0.1) {
+          xVals.push(i);
+        }
+        
+        const sigmoid = xVals.map(x => 1 / (1 + Math.exp(-x)));
+        
+        Plotly.newPlot('sigmoid-plot', [{
+          x: xVals,
+          y: sigmoid,
+          type: 'scatter',
+          mode: 'lines',
+          line: {color: '#0ea5e9', width: 3},
+          name: 'σ(x) = 1/(1+e⁻ˣ)'
+        }], {
+          title: 'Sigmoid Function: Maps Linear Predictor to Probability',
+          xaxis: {title: 'η = Xβ', color: '#9ca3af'},
+          yaxis: {title: 'p = P(Y=1|X)', color: '#9ca3af', range: [-0.05, 1.05]},
+          paper_bgcolor: '#0f172a',
+          plot_bgcolor: '#0f172a',
+          font: {color: '#e5e7eb'}
+        });
+      }
+      
+      // Convergence plot
+      function plotConvergence() {
+        const iterations = [0, 1, 2, 3, 4, 5];
+        const deviance = [1386.29, 1023.45, 876.32, 812.18, 798.45, 795.32];
+        
+        Plotly.newPlot('convergence-plot', [{
+          x: iterations,
+          y: deviance,
+          type: 'scatter',
+          mode: 'lines+markers',
+          line: {color: '#0ea5e9', width: 2},
+          marker: {color: '#0ea5e9', size: 8},
+          name: 'Deviance'
+        }], {
+          title: 'IRLS Convergence: Deviance vs Iteration',
+          xaxis: {title: 'Iteration', color: '#9ca3af'},
+          yaxis: {title: 'Deviance (-2 * Log-Likelihood)', color: '#9ca3af'},
+          paper_bgcolor: '#0f172a',
+          plot_bgcolor: '#0f172a',
+          font: {color: '#e5e7eb'}
+        });
+      }
+      
+      // Generate synthetic data for demo
+      function generateLogisticData(n, separation) {
+        const data = [];
+        const labels = [];
+        
+        // Class 0: centered at (-separation/2, -separation/2)
+        for (let i = 0; i < n; i++) {
+          data.push([
+            -separation/2 + (Math.random() - 0.5) * 2,
+            -separation/2 + (Math.random() - 0.5) * 2
+          ]);
+          labels.push(0);
+        }
+        
+        // Class 1: centered at (separation/2, separation/2)
+        for (let i = 0; i < n; i++) {
+          data.push([
+            separation/2 + (Math.random() - 0.5) * 2,
+            separation/2 + (Math.random() - 0.5) * 2
+          ]);
+          labels.push(1);
+        }
+        
+        return { data, labels };
+      }
+      
+      // Simple logistic regression using IRLS (simplified for demo)
+      function fitLogistic(data, labels, maxIter = 20) {
+        const n = data.length;
+        const X = data.map(d => [1, d[0], d[1]]); // Add intercept
+        const y = labels;
+        
+        // Initialize beta
+        let beta = [0, 0, 0];
+        
+        for (let iter = 0; iter < maxIter; iter++) {
+          // Compute predictions
+          const eta = X.map(row => 
+            row[0]*beta[0] + row[1]*beta[1] + row[2]*beta[2]
+          );
+          const p = eta.map(e => 1 / (1 + Math.exp(-e)));
+          
+          // Weight matrix (diagonal)
+          const W = p.map(pi => pi * (1 - pi));
+          
+          // Working response
+          const z = eta.map((e, i) => e + (y[i] - p[i]) / (W[i] + 1e-10));
+          
+          // Weighted least squares (simplified - using normal equations)
+          const XtWX = [[0,0,0],[0,0,0],[0,0,0]];
+          const XtWz = [0,0,0];
+          
+          for (let i = 0; i < n; i++) {
+            for (let j = 0; j < 3; j++) {
+              XtWz[j] += X[i][j] * W[i] * z[i];
+              for (let k = 0; k < 3; k++) {
+                XtWX[j][k] += X[i][j] * W[i] * X[i][k];
+              }
+            }
+          }
+          
+          // Solve (simplified - using Gaussian elimination)
+          const det = XtWX[0][0] * (XtWX[1][1]*XtWX[2][2] - XtWX[1][2]*XtWX[2][1]) -
+                      XtWX[0][1] * (XtWX[1][0]*XtWX[2][2] - XtWX[1][2]*XtWX[2][0]) +
+                      XtWX[0][2] * (XtWX[1][0]*XtWX[2][1] - XtWX[1][1]*XtWX[2][0]);
+          
+          if (Math.abs(det) < 1e-10) break;
+          
+          const inv = [[0,0,0],[0,0,0],[0,0,0]];
+          inv[0][0] = (XtWX[1][1]*XtWX[2][2] - XtWX[1][2]*XtWX[2][1]) / det;
+          inv[0][1] = (XtWX[0][2]*XtWX[2][1] - XtWX[0][1]*XtWX[2][2]) / det;
+          inv[0][2] = (XtWX[0][1]*XtWX[1][2] - XtWX[0][2]*XtWX[1][1]) / det;
+          inv[1][0] = (XtWX[1][2]*XtWX[2][0] - XtWX[1][0]*XtWX[2][2]) / det;
+          inv[1][1] = (XtWX[0][0]*XtWX[2][2] - XtWX[0][2]*XtWX[2][0]) / det;
+          inv[1][2] = (XtWX[0][2]*XtWX[1][0] - XtWX[0][0]*XtWX[1][2]) / det;
+          inv[2][0] = (XtWX[1][0]*XtWX[2][1] - XtWX[1][1]*XtWX[2][0]) / det;
+          inv[2][1] = (XtWX[0][1]*XtWX[2][0] - XtWX[0][0]*XtWX[2][1]) / det;
+          inv[2][2] = (XtWX[0][0]*XtWX[1][1] - XtWX[0][1]*XtWX[1][0]) / det;
+          
+          const betaNew = [
+            inv[0][0]*XtWz[0] + inv[0][1]*XtWz[1] + inv[0][2]*XtWz[2],
+            inv[1][0]*XtWz[0] + inv[1][1]*XtWz[1] + inv[1][2]*XtWz[2],
+            inv[2][0]*XtWz[0] + inv[2][1]*XtWz[1] + inv[2][2]*XtWz[2]
+          ];
+          
+          // Check convergence
+          const change = Math.sqrt(
+            Math.pow(betaNew[0]-beta[0], 2) +
+            Math.pow(betaNew[1]-beta[1], 2) +
+            Math.pow(betaNew[2]-beta[2], 2)
+          );
+          
+          beta = betaNew;
+          if (change < 1e-6) break;
+        }
+        
+        return beta;
+      }
+      
+      // Plot logistic regression demo
+      function updateLogisticPlot() {
+        const n = parseInt(document.getElementById('n-points').value);
+        const separation = parseFloat(document.getElementById('separation').value);
+        
+        const { data, labels } = generateLogisticData(n, separation);
+        const beta = fitLogistic(data, labels);
+        
+        // Create scatter plot
+        const class0 = { x: [], y: [] };
+        const class1 = { x: [], y: [] };
+        
+        data.forEach((point, i) => {
+          if (labels[i] === 0) {
+            class0.x.push(point[0]);
+            class0.y.push(point[1]);
+          } else {
+            class1.x.push(point[0]);
+            class1.y.push(point[1]);
+          }
+        });
+        
+        // Create decision boundary
+        const xMin = Math.min(...data.map(d => d[0])) - 0.5;
+        const xMax = Math.max(...data.map(d => d[0])) + 0.5;
+        const boundaryX = [xMin, xMax];
+        const boundaryY = boundaryX.map(x => 
+          -(beta[0] + beta[1]*x) / beta[2]
+        );
+        
+        const traces = [
+          {
+            x: class0.x,
+            y: class0.y,
+            mode: 'markers',
+            type: 'scatter',
+            marker: { color: '#ef4444', size: 8 },
+            name: 'Class 0'
+          },
+          {
+            x: class1.x,
+            y: class1.y,
+            mode: 'markers',
+            type: 'scatter',
+            marker: { color: '#10b981', size: 8 },
+            name: 'Class 1'
+          },
+          {
+            x: boundaryX,
+            y: boundaryY,
+            mode: 'lines',
+            type: 'scatter',
+            line: { color: '#0ea5e9', width: 3, dash: 'dash' },
+            name: 'Decision Boundary'
+          }
+        ];
+        
+        Plotly.newPlot('logistic-demo', traces, {
+          title: 'Logistic Regression Decision Boundary',
+          xaxis: { title: 'Feature 1', color: '#9ca3af' },
+          yaxis: { title: 'Feature 2', color: '#9ca3af' },
+          paper_bgcolor: '#0f172a',
+          plot_bgcolor: '#0f172a',
+          font: { color: '#e5e7eb' },
+          showlegend: true
+        });
+        
+        // Display coefficients
+        document.getElementById('logistic-results').style.display = 'block';
+        document.getElementById('logistic-coefs').innerHTML = `
+          <tr><td>β₀ (intercept)</td><td>${beta[0].toFixed(4)}</td><td>Log-odds when all features = 0</td></tr>
+          <tr><td>β₁</td><td>${beta[1].toFixed(4)}</td><td>Change in log-odds per unit change in Feature 1</td></tr>
+          <tr><td>β₂</td><td>${beta[2].toFixed(4)}</td><td>Change in log-odds per unit change in Feature 2</td></tr>
+        `;
+      }
+      
+      // Initialize on load
+      window.onload = function() {
+        plotSigmoid();
+        plotConvergence();
+        updateLogisticPlot();
+        
+        document.getElementById('generate-data').addEventListener('click', updateLogisticPlot);
+      };
+    </script>
+  </body>
+</html>

@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kelly Criterion – Optimal Betting & Portfolio Growth</title>
+    <!-- same style stack as garch.html -->
+    <link rel="stylesheet" href="../css/bootstrap.min.css" />
+    <link rel="stylesheet" href="../css/unicons.css" />
+    <link rel="stylesheet" href="../css/tooplate-style.css" />
+    <!-- MathJax for LaTeX -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" defer></script>
+    <!-- Plotly for interactive graphs -->
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <!-- Prism.js for code syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    
+    <style>
+        :root { --accent: #0ea5e9; --space-1: .75rem; --space-2: 1.25rem; --space-3: 2rem; --code-bg: #1e1e2e; }
+        body { background: #0b0f19; color: #e5e7eb; line-height: 1.6; }
+        .navbar { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px); }
+        .nav-link, .navbar-brand { color: #e5e7eb !important; }
+        .nav-link:hover { color: var(--accent) !important; }
+        .btn-accent { background: var(--accent); color: #081018; border: 0; }
+        .btn-accent:hover { background: #0284c7; color: #e5e7eb; }
+        .hero { padding: 7rem 0 2rem; }
+        .section { padding: 2rem 0; }
+        .card { background: #0f172a; border: 1px solid #1f2937; margin-bottom: 1.5rem; border-radius: 0.75rem; }
+        .card-header { background: #1e293b; border-bottom: 1px solid #334155; padding: 1rem 1.5rem; font-weight: 600; border-radius: 0.75rem 0.75rem 0 0 !important; }
+        a { text-decoration: none; }
+        h1, h2, h3, h4, h5, h6 { color: #ffffff; }
+        .math-block { font-size: 1.2rem; padding: 1.5rem; background: #1a1f2e; border-radius: 0.5rem; text-align: center; border-left: 4px solid var(--accent); margin: 1.5rem 0; overflow-x: auto; }
+        .code-block { background: var(--code-bg); border-radius: 0.5rem; padding: 1rem; margin: 1rem 0; border: 1px solid #2d2d3a; overflow-x: auto; }
+        .code-block pre { margin: 0; color: #e5e7eb; font-family: 'Fira Code', monospace; font-size: 0.9rem; }
+        .plot-container { width: 100%; height: 400px; margin: 1.5rem 0; background: #0f172a; border-radius: 0.5rem; }
+        .insight-card { background: #1e293b; border-left: 4px solid var(--accent); padding: 1rem 1.5rem; margin: 1rem 0; border-radius: 0.5rem; }
+        .param-badge { background: #2d3a4f; color: #e5e7eb; padding: 0.25rem 0.75rem; border-radius: 2rem; font-family: monospace; display: inline-block; margin: 0.25rem; }
+        .table-analysis { background: #1a1f2e; border-radius: 0.5rem; padding: 1rem; }
+        .table-analysis table { width: 100%; color: #e5e7eb; }
+        .table-analysis th { color: var(--accent); font-weight: 600; padding: 0.5rem; border-bottom: 1px solid #334155; }
+        .table-analysis td { padding: 0.5rem; border-bottom: 1px solid #1f2937; }
+        .katex { font-size: 1.1em; }
+        .katex-display { margin: 0.5em 0; }
+        p, li, .card-body, .insight-card p { color: #ffffff; }
+        .form-label { color: #d1d5db; }
+        .form-control, .form-select { background: #1e293b; border: 1px solid #374151; color: #f3f4f6; }
+        .form-control:focus { background: #1e293b; color: white; border-color: var(--accent); box-shadow: 0 0 0 0.2rem rgba(14,165,233,0.25); }
+        hr { border-color: #334155; }
+        .legend-inline { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 1rem 0; }
+        .legend-color { width: 20px; height: 10px; display: inline-block; margin-right: 6px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">crxxom</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="nav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="../projects.html">Projects</a></li>
+                    <li class="nav-item"><a class="nav-link" href="../notebooks.html">Notebooks</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section class="hero">
+            <h1 class="fw-bold mb-4">Kelly Criterion</h1>
+            <p class="lead mb-5" style="color: #9ca3af;">
+                A mathematical framework for optimal bet sizing to maximise long‑run wealth growth.
+                Derivation, interactive coin‑toss simulation, and continuous portfolio application.
+            </p>
+        </section>
+
+        <!-- Mathematical Foundation -->
+        <section class="section">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Mathematical Foundation</h3>
+                </div>
+                <div class="card-body">
+                    <p>Consider a binary bet with probability \(p\) of winning a fraction \(g\) of the stake, and probability \(q = 1-p\) of losing a fraction \(l\).</p>
+                    <div class="math-block">
+                        \[
+                        W_{t+1} = \begin{cases}
+                        W_t (1 + f g) & \text{with prob. } p \\[4pt]
+                        W_t (1 - f l) & \text{with prob. } q
+                        \end{cases}
+                        \]
+                    </div>
+                    <p>After \(n\) independent trials the wealth is</p>
+                    <div class="math-block">
+                        \[
+                        W_n = W_0 \, (1+fg)^{np}\,(1-fl)^{nq}
+                        \]
+                    </div>
+                    <p>The exponential growth rate per trial is</p>
+                    <div class="math-block">
+                        \[
+                        G(f) = \frac{1}{n}\ln\frac{W_n}{W_0} = p\ln(1+fg) + q\ln(1-fl)
+                        \]
+                    </div>
+                    <p>Maximising \(G(f)\) w.r.t. \(f\) gives the optimal fraction</p>
+                    <div class="math-block">
+                        \[
+                        f^* = \frac{p}{l} - \frac{q}{g}
+                        \]
+                    </div>
+                    <p>For the common case where you win or lose the full stake (\(g=l=1\)), this simplifies to</p>
+                    <div class="math-block">
+                        \[
+                        f^* = p - q = 2p - 1
+                        \]
+                    </div>
+                    <div class="insight-card">
+                        <strong>Interpretation:</strong> Betting exactly \(f^*\) maximises the long‑term growth rate.
+                        Over‑betting (\(f > f^*\)) increases volatility and reduces growth; under‑betting is safer but sub‑optimal.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Coin‑Toss Simulator -->
+        <section class="section">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Interactive Coin‑Toss Simulation</h3>
+                </div>
+                <div class="card-body">
+                    <form class="row gy-3 gx-3 align-items-end">
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">p (win prob.)</label>
+                            <input type="number" id="pCoin" class="form-control" value="0.6" step="0.01" min="0.5" max="0.99">
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">g (win gain)</label>
+                            <input type="number" id="gCoin" class="form-control" value="1.0" step="0.1" min="0.1">
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">l (loss)</label>
+                            <input type="number" id="lCoin" class="form-control" value="1.0" step="0.1" min="0.1">
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">Initial bankroll</label>
+                            <input type="number" id="bankrollCoin" class="form-control" value="1000" step="100">
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <button type="button" id="runCoinSim" class="btn btn-accent w-100">Run 100 bets</button>
+                        </div>
+                    </form>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Kelly fraction \(f^*\)</h5>
+                            <div class="math-block" id="kellyFormulaDisplay" style="font-size:1.5rem;">0.200</div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Wealth trajectories (10 paths)</h5>
+                            <div id="coinTrajPlot" class="plot-container"></div>
+                        </div>
+                    </div>
+                    <div class="legend-inline">
+                        <span><span class="legend-color" style="background:#0ea5e9;"></span> Kelly</span>
+                        <span><span class="legend-color" style="background:#f97316;"></span> Half‑Kelly</span>
+                        <span><span class="legend-color" style="background:#ef4444;"></span> 2× Kelly</span>
+                        <span><span class="legend-color" style="background:#10b981;"></span> All‑in (f=1)</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Continuous Portfolio (GBM) -->
+        <section class="section">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Continuous Portfolio – Kelly for Stocks</h3>
+                </div>
+                <div class="card-body">
+                    <p>For a risky asset with expected return \(\mu\) and volatility \(\sigma\) (risk‑free rate \(r\)), the optimal fraction is</p>
+                    <div class="math-block">
+                        \[
+                        f^* = \frac{\mu - r}{\sigma^2}
+                        \]
+                    </div>
+                    <form class="row gy-3 gx-3 align-items-end">
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">\(\mu\) (return)</label>
+                            <input type="number" id="muPort" class="form-control" value="0.08" step="0.01">
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">\(\sigma\) (vol)</label>
+                            <input type="number" id="volPort" class="form-control" value="0.20" step="0.01">
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">\(r\) (risk‑free)</label>
+                            <input type="number" id="rfPort" class="form-control" value="0.02" step="0.01">
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">Years</label>
+                            <input type="number" id="yearsPort" class="form-control" value="5" min="1">
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <button type="button" id="runPortSim" class="btn btn-accent w-100">Run</button>
+                        </div>
+                    </form>
+                    
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="param-badge">Kelly \(f^*\) = <span id="kellyFracPort">0.15</span></div>
+                            <div class="param-badge">MC optimal (log) ≈ <span id="mcOptimalPort">—</span></div>
+                            <div class="mt-3 table-analysis">
+                                <table class="table table-sm">
+                                    <tr><th>Fraction</th><th>Mean wealth</th><th>P(loss>50%)</th></tr>
+                                    <tr><td>0.0 (cash)</td><td id="stat0">—</td><td id="loss0">—</td></tr>
+                                    <tr><td>Kelly</td><td id="statKelly">—</td><td id="lossKelly">—</td></tr>
+                                    <tr><td>1.0 (all stocks)</td><td id="stat1">—</td><td id="loss1">—</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div id="portSimPlot" class="plot-container" style="height:350px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3D Kelly Surface -->
+        <section class="section">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Kelly Surface: Optimal Fraction vs \(\mu\) and \(\sigma\)</h3>
+                </div>
+                <div class="card-body">
+                    <div id="surface3d" class="plot-container" style="height:450px;"></div>
+                    <p class="mt-2 text-secondary text-center small">The red dot marks the current parameters \(\mu = 0.08,\ \sigma = 0.20\). Surface shows \(f^* = (\mu-r)/\sigma^2\) with \(r=0.02\).</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Python Implementation (vectorized) -->
+        <section class="section">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Python Implementation – Vectorised Simulation</h3>
+                </div>
+                <div class="card-body">
+                    <p>Efficient simulation of a continuously rebalanced Kelly portfolio using geometric Brownian motion.</p>
+                    <div class="code-block">
+                        <pre><code class="language-python">import numpy as np
+
+def simulate_kelly(mu, vol, rf, frac, sim=10000, n=252):
+    """
+    Vectorised Kelly simulation with daily rebalancing.
+    Returns array of shape (sim, n+1), initial wealth = 1.
+    """
+    dt = 1 / n
+    z = np.random.randn(sim, n)
+    port_mu = frac * mu + (1 - frac) * rf
+    port_vol = frac * vol
+    log_drift = (port_mu - 0.5 * port_vol**2) * dt
+    log_shocks = port_vol * np.sqrt(dt) * z
+    log_returns = log_drift + log_shocks
+    cum_log = np.cumsum(log_returns, axis=1)
+    wealth = np.exp(cum_log)
+    return np.column_stack([np.ones(sim), wealth])</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="py-4 mt-5" style="color:#9ca3af;border-top:1px solid #1f2937;">
+        <div class="container d-flex justify-content-between align-items-center">
+            <span>© 2026</span>
+            <div class="d-flex" style="gap:.75rem;">
+                <a href="https://github.com/crxxom" target="_blank" class="text-secondary">GitHub</a>
+                <a href="https://www.kaggle.com/crxxom" target="_blank" class="text-secondary">Kaggle</a>
+                <a href="https://www.linkedin.com/in/jadon-ng-848a48263/" target="_blank" class="text-secondary">LinkedIn</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ----- seeded random (mulberry32) -----
+        function mulberry32(seed) {
+            return function() {
+                seed |= 0;
+                seed = (seed + 0x6D2B79F5) | 0;
+                let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+                t = (t + Math.imul(t ^ t >>> 7, 61 | t)) ^ t;
+                return ((t ^ t >>> 14) >>> 0) / 4294967296;
+            };
+        }
+
+        // ----- coin toss simulation (binary) -----
+        function runCoinToss(p, g, l, bankroll, nBets=100, nPaths=10, seed=42) {
+            const rng = mulberry32(seed);
+            const kelly = (p/l) - ((1-p)/g);
+            // four strategies: Kelly, half, double, all-in
+            const fractions = [kelly, kelly*0.5, kelly*2, 1.0];
+            const colors = ['#0ea5e9', '#f97316', '#ef4444', '#10b981'];
+            const names = ['Kelly', '½ Kelly', '2× Kelly', 'All-in (f=1)'];
+            const days = Array.from({length: nBets+1}, (_,i)=>i);
+            let traces = [];
+
+            for (let idx=0; idx<fractions.length; idx++) {
+                let f = fractions[idx];
+                if (f <= 0) continue;
+                for (let path=0; path<nPaths; path++) {
+                    let wealth = bankroll;
+                    let wTrace = [wealth];
+                    for (let bet=0; bet<nBets; bet++) {
+                        let win = rng() < p;
+                        if (win) wealth *= (1 + f * g);
+                        else wealth *= (1 - f * l);
+                        wTrace.push(wealth);
+                    }
+                    traces.push({
+                        x: days, y: wTrace,
+                        mode: 'lines',
+                        line: { width: 1, color: colors[idx] },
+                        opacity: 0.5,
+                        showlegend: (path===0),
+                        name: (path===0) ? names[idx] : undefined,
+                        hovertemplate: 'Bet: %{x}<br>Wealth: $%{y:.2f}<extra></extra>'
+                    });
+                }
+            }
+            return traces;
+        }
+
+        // update coin display
+        function refreshCoin() {
+            const p = parseFloat(document.getElementById('pCoin').value);
+            const g = parseFloat(document.getElementById('gCoin').value);
+            const l = parseFloat(document.getElementById('lCoin').value);
+            const bank = parseFloat(document.getElementById('bankrollCoin').value);
+            const kelly = (p/l) - ((1-p)/g);
+            document.getElementById('kellyFormulaDisplay').innerHTML = `f* = ${kelly.toFixed(3)}`;
+            const traces = runCoinToss(p, g, l, bank, 100, 10, Date.now());  // fresh random each click
+            Plotly.newPlot('coinTrajPlot', traces, {
+                margin: {t:20, l:50, r:20, b:40},
+                paper_bgcolor: '#0b0f19', plot_bgcolor: '#0b0f19',
+                xaxis: {color:'#9ca3af', title:'Bet number'},
+                yaxis: {color:'#9ca3af', title:'Wealth ($)', type:'log'},
+                hovermode:'x unified'
+            }, {displayModeBar: false});
+        }
+
+        document.getElementById('pCoin').addEventListener('input', refreshCoin);
+        document.getElementById('gCoin').addEventListener('change', refreshCoin);
+        document.getElementById('lCoin').addEventListener('change', refreshCoin);
+        document.getElementById('bankrollCoin').addEventListener('change', refreshCoin);
+        document.getElementById('runCoinSim').addEventListener('click', refreshCoin);
+        window.addEventListener('load', refreshCoin);
+
+        // ----- continuous portfolio simulation (vectorised approximation) -----
+        function runPortfolio(mu, vol, rf, years) {
+            const n = 252 * years;
+            const sim = 5000;
+            const dt = 1/252;
+            const kelly = Math.min(1, Math.max(0, (mu - rf) / (vol*vol) ));
+            document.getElementById('kellyFracPort').innerText = kelly.toFixed(3);
+
+            const fracs = [0, kelly, 1.0];
+            const labels = ['cash (f=0)', 'Kelly', 'all stocks (f=1)'];
+            const colors = ['#f59e0b', '#0ea5e9', '#10b981'];
+            const days = Array.from({length:n+1}, (_,i)=> i/252);
+
+            // common random numbers (fair comparison)
+            const seed = 2025;
+            const rng = mulberry32(seed);
+            const Z = Array.from({length:sim}, ()=> 
+                Array.from({length:n}, ()=> (rng()*2-1) * Math.sqrt(3)) ); // approximate normal (mean 0, var 1)
+
+            function simulateFrac(frac) {
+                let portMu = frac*mu + (1-frac)*rf;
+                let portVol = frac*vol;
+                let logDrift = (portMu - 0.5*portVol*portVol) * dt;
+                let volSqrtDt = portVol * Math.sqrt(dt);
+                let finalWealth = new Array(sim);
+                let medianPath = new Array(n+1).fill(1);
+                for (let i=0; i<sim; i++) {
+                    let logRet = 0;
+                    for (let t=0; t<n; t++) {
+                        logRet += logDrift + volSqrtDt * Z[i][t];
+                        if (i === Math.floor(sim/2)) medianPath[t+1] = Math.exp(logRet);
+                    }
+                    finalWealth[i] = Math.exp(logRet);
+                }
+                finalWealth.sort((a,b)=>a-b);
+                return { finalWealth, medianPath };
+            }
+
+            let traces = [];
+            let stats = {};
+            for (let idx=0; idx<fracs.length; idx++) {
+                let f = fracs[idx];
+                let {finalWealth, medianPath} = simulateFrac(f);
+                let meanW = finalWealth.reduce((a,b)=>a+b,0)/sim;
+                let loss50 = finalWealth.filter(w=>w<0.5).length / sim;
+                stats[`f${idx}`] = {mean: meanW, loss: loss50};
+                traces.push({
+                    x: days, y: medianPath,
+                    mode:'lines', line:{width:2, color:colors[idx]},
+                    name: labels[idx],
+                    hovertemplate: 'Year: %{x:.2f}<br>Wealth: %{y:.2f}<extra></extra>'
+                });
+            }
+            document.getElementById('stat0').innerText = stats.f0.mean.toFixed(2);
+            document.getElementById('loss0').innerText = (stats.f0.loss*100).toFixed(1)+'%';
+            document.getElementById('statKelly').innerText = stats.f1.mean.toFixed(2);
+            document.getElementById('lossKelly').innerText = (stats.f1.loss*100).toFixed(1)+'%';
+            document.getElementById('stat1').innerText = stats.f2.mean.toFixed(2);
+            document.getElementById('loss1').innerText = (stats.f2.loss*100).toFixed(1)+'%';
+
+            // crude MC optimal (log growth)
+            let bestF = 0; let bestLog = -999;
+            for (let f=0; f<=1; f+=0.05) {
+                let {finalWealth} = simulateFrac(f);
+                let logG = finalWealth.map(w=>Math.log(w)).reduce((a,b)=>a+b,0)/sim;
+                if (logG > bestLog) { bestLog = logG; bestF = f; }
+            }
+            document.getElementById('mcOptimalPort').innerText = bestF.toFixed(2);
+
+            Plotly.newPlot('portSimPlot', traces, {
+                margin:{t:20, l:50, r:20, b:40},
+                paper_bgcolor:'#0b0f19', plot_bgcolor:'#0b0f19',
+                xaxis:{color:'#9ca3af', title:'Time (years)'},
+                yaxis:{color:'#9ca3af', title:'Wealth', type:'log'},
+                hovermode:'x unified'
+            }, {displayModeBar:false});
+        }
+
+        document.getElementById('runPortSim').addEventListener('click', ()=>{
+            const mu = parseFloat(document.getElementById('muPort').value);
+            const vol = parseFloat(document.getElementById('volPort').value);
+            const rf = parseFloat(document.getElementById('rfPort').value);
+            const years = parseFloat(document.getElementById('yearsPort').value);
+            runPortfolio(mu, vol, rf, years);
+        });
+        // initial run after short delay
+        window.addEventListener('load', ()=>{
+            setTimeout(()=>{
+                const mu = parseFloat(document.getElementById('muPort').value);
+                const vol = parseFloat(document.getElementById('volPort').value);
+                const rf = parseFloat(document.getElementById('rfPort').value);
+                const years = parseFloat(document.getElementById('yearsPort').value);
+                runPortfolio(mu, vol, rf, years);
+            }, 200);
+        });
+
+        // ----- 3D Kelly surface -----
+        function createSurface() {
+            const mu_vals = [0.02,0.04,0.06,0.08,0.10,0.12,0.14,0.16];
+            const vol_vals = [0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55];
+            let z = [];
+            const rf = 0.02;
+            for (let i=0; i<mu_vals.length; i++) {
+                let row = [];
+                for (let j=0; j<vol_vals.length; j++) {
+                    let f = (mu_vals[i] - rf) / (vol_vals[j]*vol_vals[j]);
+                    f = Math.min(1, Math.max(0, f));
+                    row.push(f);
+                }
+                z.push(row);
+            }
+            // current dot from default inputs (mu=0.08, vol=0.2)
+            let curMu = 0.08, curVol = 0.20, curF = (0.08-0.02)/(0.2*0.2);
+            const data = [
+                {
+                    z: z, x: vol_vals, y: mu_vals,
+                    type: 'surface', colorscale: 'Viridis', opacity:0.9,
+                    contours: {z:{show:true, start:0, end:1, size:0.1}},
+                    hovertemplate: 'σ: %{x}<br>μ: %{y}<br>f*: %{z:.3f}<extra></extra>'
+                },
+                {
+                    type: 'scatter3d', mode: 'markers',
+                    x: [curVol], y: [curMu], z: [curF],
+                    marker: {size: 8, color: 'red', symbol: 'circle'},
+                    name: 'current'
+                }
+            ];
+            Plotly.newPlot('surface3d', data, {
+                scene: {
+                    xaxis:{title:'Volatility σ', color:'#ccc'},
+                    yaxis:{title:'Expected return μ', color:'#ccc'},
+                    zaxis:{title:'Optimal f*', range:[0,1], color:'#ccc'},
+                    bgcolor: '#0f172a'
+                },
+                paper_bgcolor: '#0b0f19',
+                margin: {l:0, r:0, b:0, t:0}
+            });
+        }
+        window.addEventListener('load', createSurface);
+    </script>
+    <script src="../js/jquery-3.3.1.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+</body>
+</html>
