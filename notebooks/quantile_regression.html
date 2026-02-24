@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quantile Regression - Explanation & Visualization</title>
+    <link rel="stylesheet" href="../css/bootstrap.min.css" />
+    <link rel="stylesheet" href="../css/unicons.css" />
+    <link rel="stylesheet" href="../css/tooplate-style.css" />
+    <!-- MathJax for LaTeX rendering -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']],
+          processEscapes: true
+        }
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" defer></script>
+    <!-- Plotly for interactive graphs -->
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <!-- Prism.js for code syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <!-- jStat for probability distributions -->
+    <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.6/dist/jstat.min.js"></script>
+    
+    <style>
+      :root { 
+        --accent: #0ea5e9; 
+        --space-1: .75rem; 
+        --space-2: 1.25rem; 
+        --space-3: 2rem; 
+        --code-bg: #1e1e2e;
+      }
+      body { 
+        background: #0b0f19; 
+        color: #e5e7eb; 
+        line-height: 1.6;
+      }
+      .navbar { 
+        background: rgba(15, 23, 42, 0.7); 
+        backdrop-filter: blur(8px); 
+      }
+      .nav-link, .navbar-brand { 
+        color: #e5e7eb !important; 
+      }
+      .nav-link:hover { 
+        color: var(--accent) !important; 
+      }
+      .btn-accent { 
+        background: var(--accent); 
+        color: #081018; 
+        border: 0; 
+      }
+      .btn-accent:hover { 
+        background: #0284c7; 
+        color: #e5e7eb; 
+      }
+      .btn { 
+        padding: 0.6rem 1.1rem; 
+      }
+      .btn + .btn { 
+        margin-left: var(--space-1); 
+      }
+      .hero { 
+        padding: 7rem 0 2rem; 
+      }
+      .section { 
+        padding: 2rem 0; 
+      }
+      .card { 
+        background: #0f172a; 
+        border: 1px solid #1f2937; 
+        margin-bottom: 1.5rem;
+        border-radius: 0.75rem;
+      }
+      .card-header {
+        background: #1e293b;
+        border-bottom: 1px solid #334155;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        border-radius: 0.75rem 0.75rem 0 0 !important;
+      }
+      a { 
+        text-decoration: none; 
+      }
+      h1, h2, h3, h4, h5, h6 {
+        color: #ffffff;
+      }
+      .math-block {
+        font-size: 1.2rem;
+        padding: 1.5rem;
+        background: #1a1f2e;
+        border-radius: 0.5rem;
+        text-align: center;
+        border-left: 4px solid var(--accent);
+        overflow-x: auto;
+      }
+      .code-block {
+        background: var(--code-bg);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin: 1rem 0;
+        border: 1px solid #2d2d3a;
+        overflow-x: auto;
+      }
+      .code-block pre {
+        margin: 0;
+        color: #e5e7eb;
+        font-family: 'Fira Code', monospace;
+        font-size: 0.9rem;
+      }
+      .plot-container {
+        width: 100%;
+        height: 500px;
+        margin: 1.5rem 0;
+        background: #0f172a;
+        border-radius: 0.5rem;
+      }
+      .insight-card {
+        background: #1e293b;
+        border-left: 4px solid var(--accent);
+        padding: 1rem 1.5rem;
+        margin: 1rem 0;
+        border-radius: 0.5rem;
+      }
+      p, li, .card-body, .insight-card p {
+        color: #d1d5db;
+      }
+      input[type=range] {
+        width: 100%;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg fixed-top">
+      <div class="container">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="nav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="../projects.html">Projects</a></li>
+            <li class="nav-item"><a class="nav-link" href="../notebooks.html">Notebooks</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container">
+      <section class="hero">
+        <h1 class="fw-bold mb-4">Quantile Regression</h1>
+        <p class="lead mb-5" style="color: #9ca3af;">
+          Beyond the mean: Modeling conditional quantiles for robust regression and heteroskedastic data.
+        </p>
+      </section>
+
+      <!-- Introduction -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Introduction</h3>
+          </div>
+          <div class="card-body">
+            <p>In traditional linear regression, we attempt to model the conditional mean by assuming that errors are normally distributed with zero mean and constant variance.</p>
+            <div class="math-block">
+              $$ \epsilon \sim N(0, \sigma^2) $$
+            </div>
+            <p class="mt-3">Unfortunately, real-world data are usually not normally distributed. Often, data are heteroskedastic, have many outliers, or follow special distributions. In these cases, linear regression may not be the best model to use.</p>
+            <p>Quantile regression is a useful alternative when the data are not normally distributed. It models the conditional median (or any other quantile) of the response variable instead of the conditional mean—it models the conditional distribution instead of just the conditional mean.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Interactive Pinball Loss -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">The Pinball Loss Function</h3>
+          </div>
+          <div class="card-body">
+            <p>The difference between quantile regression and linear regression lies solely in the loss function. In quantile regression, a <strong>pinball loss function</strong> is used, defined as:</p>
+            <div class="math-block">
+              $$ \rho_\tau(u) = u(\tau - I(u<0)) $$
+            </div>
+            <p class="mt-3">or equivalently:</p>
+            <div class="math-block">
+              $$ \rho_\tau(u) = \begin{cases} \tau u & \text{if } u \ge 0 \\ (\tau - 1) u & \text{if } u < 0 \end{cases} $$
+            </div>
+            
+            <div class="insight-card">
+              <h5 class="text-white">Interactive Visualization</h5>
+              <p>Drag the slider to change the quantile ($\tau$) and see how the loss function changes shape. Notice how $\tau=0.5$ yields the symmetric absolute error (median regression), while extreme values penalize over/under-predictions asymmetrically.</p>
+              
+              <label for="quantileSlider" class="form-label text-white">Quantile ($\tau$): <span id="quantileValue">0.5</span></label>
+              <input type="range" class="form-range" min="0.05" max="0.95" step="0.05" id="quantileSlider" value="0.5">
+            </div>
+
+            <div id="lossPlot" class="plot-container" style="height: 400px;"></div>
+            
+            <p><strong>Intuition:</strong> If we want to model the 0.25 quantile (a lower quantile), the loss function weights points lying below the line less heavily than points above it. Optimization balances these weights so that approximately 25% of points fall below the line.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Examples -->
+      <section class="section">
+        <h2 class="mb-4">Examples: When to use Quantile Regression</h2>
+
+        <!-- Heteroskedasticity -->
+        <div class="card">
+          <div class="card-header">
+            <h4 class="mb-0">1. Heteroskedasticity</h4>
+          </div>
+          <div class="card-body">
+            <p>Notice how quantile regression accurately captures the heteroskedasticity by estimating conditional quantiles separately. The spread of the quantiles increases as X increases.</p>
+            <div class="code-block">
+<pre><code class="language-python"># Generate data with heteroskedasticity
+np.random.seed(42)
+n = 1000
+X = np.random.uniform(0, 10, n)
+y = 2 * X + X * np.random.normal(0, 0.5, n)  # Variance increases with X</code></pre>
+            </div>
+            <div id="heteroPlot" class="plot-container"></div>
+          </div>
+        </div>
+
+        <!-- Skewed Distribution -->
+        <div class="card">
+          <div class="card-header">
+            <h4 class="mb-0">2. Skewed Distribution (Log-Normal)</h4>
+          </div>
+          <div class="card-body">
+            <p>Notice how quantile regression can accurately capture the skewness by estimating individual conditional quantiles, unlike the conditional mean which enforces symmetric boundaries.</p>
+            <div class="code-block">
+<pre><code class="language-python"># Generate skewed errors from log-normal distribution
+skewed_errors = np.random.lognormal(mean=0, sigma=0.8, size=n)
+skewed_errors = skewed_errors - np.mean(skewed_errors) # Center errors
+y = 2 * X + skewed_errors</code></pre>
+            </div>
+            <div id="skewedPlot" class="plot-container"></div>
+          </div>
+        </div>
+
+        <!-- Heavy Tailed -->
+        <div class="card">
+          <div class="card-header">
+            <h4 class="mb-0">3. Heavy-Tailed Distribution (Cauchy)</h4>
+          </div>
+          <div class="card-body">
+            <p>The Cauchy distribution has undefined mean and variance. Linear regression (Least Squares) crumbles under the extreme outliers, but Quantile Regression (robust to outliers) prevails.</p>
+            <div class="code-block">
+<pre><code class="language-python"># Generate errors from Cauchy distribution
+cauchy_errors = np.random.standard_cauchy(size=n) * 2
+y = 2 * X + cauchy_errors</code></pre>
+            </div>
+            <div id="cauchyPlot" class="plot-container"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Prediction vs Confidence Interval -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Prediction Interval vs Confidence Interval</h3>
+          </div>
+          <div class="card-body">
+            <p>We compare the prediction interval derived from linear regression with the quantile estimated with a quantile regression model. Quantile regression provides a more robust estimate of the conditional distribution.</p>
+            <p>Note that <strong>confidence intervals (CI)</strong> estimate the range for the mean response, whereas <strong>prediction intervals (PI)</strong> predict the range for a single, new observation.</p>
+            
+            <p>Formula for prediction interval:</p>
+            <div class="math-block">
+              $$ x_0^T\hat{\beta} \pm t_{n-p, \alpha /2}\hat{\sigma}\sqrt{1+x_0^T(X^TX)^{-1}x_0} $$
+            </div>
+            
+            <p>Formula for confidence interval:</p>
+            <div class="math-block">
+              $$ x_0^T\hat{\beta} \pm t_{n-p, \alpha /2}\hat{\sigma}\sqrt{x_0^T(X^TX)^{-1}x_0} $$
+            </div>
+            
+            <p>The difference is the "+1" inside the square root. The prediction interval is always wider, as it accounts for the variance of the error term $\epsilon$ in addition to the uncertainty in the coefficient estimates.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Derivation -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Derivation of the Quantile Loss Function</h3>
+          </div>
+          <div class="card-body">
+            <p>We want to find a prediction $\hat{y}$ that minimizes the expected loss for a given quantile $\tau \in (0,1)$.</p>
+            
+            <p><strong>Step 1: Define asymmetric absolute loss</strong></p>
+            <div class="math-block">
+              $$ L_\tau(y, \hat{y}) = \begin{cases} c_1 |y - \hat{y}| & \text{if } y \ge \hat{y} \\ c_2 |y - \hat{y}| & \text{if } y < \hat{y} \end{cases} $$
+            </div>
+            
+            <p><strong>Step 2: Express expected loss</strong></p>
+            <div class="math-block">
+              $$ E[L_\tau(Y, \hat{y})] = c_1 \int_{\hat{y}}^{\infty} (y - \hat{y}) f_Y(y) \, dy + c_2 \int_{-\infty}^{\hat{y}} (\hat{y} - y) f_Y(y) \, dy $$
+            </div>
+            
+            <p><strong>Step 3: Take derivative with respect to $\hat{y}$</strong></p>
+            <p>Using Leibniz's rule for differentiation under the integral sign:</p>
+            <div class="math-block">
+              $$ \frac{\partial}{\partial \hat{y}} E[L_\tau] = -c_1 \int_{\hat{y}}^{\infty} f_Y(y) \, dy + c_2 \int_{-\infty}^{\hat{y}} f_Y(y) \, dy $$
+            </div>
+            <p>This simplifies to:</p>
+            <div class="math-block">
+              $$ \frac{\partial}{\partial \hat{y}} E[L_\tau] = -c_1 [1 - F_Y(\hat{y})] + c_2 F_Y(\hat{y}) $$
+            </div>
+            
+            <p><strong>Step 4: Set derivative to zero for optimal prediction</strong></p>
+            <div class="math-block">
+              $$ -c_1 [1 - F_Y(\hat{y})] + c_2 F_Y(\hat{y}) = 0 $$
+              $$ c_2 F_Y(\hat{y}) = c_1 [1 - F_Y(\hat{y})] $$
+              $$ c_2 F_Y(\hat{y}) = c_1 - c_1 F_Y(\hat{y}) $$
+              $$ c_2 F_Y(\hat{y}) + c_1 F_Y(\hat{y}) = c_1 $$
+              $$ F_Y(\hat{y})(c_1 + c_2) = c_1 $$
+              $$ F_Y(\hat{y}) = \frac{c_1}{c_1 + c_2} $$
+            </div>
+            
+            <p><strong>Step 5: Set this equal to the desired quantile</strong></p>
+            <div class="math-block">
+              $$ \tau = \frac{c_1}{c_1 + c_2} $$
+            </div>
+            
+            <p><strong>Step 6: Choose convenient constants</strong></p>
+            <p>A convenient normalization is to set $c_1 + c_2 = 1$, which gives:</p>
+            <div class="math-block">
+              $$ c_1 = \tau \quad \text{and} \quad c_2 = 1 - \tau $$
+            </div>
+            
+            <p><strong>Step 7: The resulting loss function</strong></p>
+            <p>Substituting these constants back into our original loss function:</p>
+            <div class="math-block">
+              $$ \rho_\tau(u) = \begin{cases} \tau |u| & \text{if } u \ge 0 \\ (1-\tau) |u| & \text{if } u < 0 \end{cases} $$
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Implementation -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Implementation in Python</h3>
+          </div>
+          <div class="card-body">
+            <div class="code-block">
+<pre><code class="language-python">import statsmodels.api as sm
+from statsmodels.regression.quantile_regression import QuantReg
+
+# Add constant to predictor variables
+X_with_const = sm.add_constant(X)
+
+# Fit quantile regression for multiple quantiles
+quantiles = [0.1, 0.25, 0.5, 0.75, 0.9]
+
+for tau in quantiles:
+    # Fit the model
+    model = QuantReg(y, X_with_const)
+    result = model.fit(q=tau)
+
+    # Make predictions
+    predictions = result.predict(X_with_const)
+    
+    # Print summary
+    print(result.summary())</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <script>
+      // 1. Pinball Loss Interactive Plot
+      function updateLossPlot() {
+        const tau = parseFloat(document.getElementById('quantileSlider').value);
+        document.getElementById('quantileValue').innerText = tau;
+        
+        const residuals = [];
+        const loss = [];
+        
+        for (let u = -10; u <= 10; u += 0.1) {
+          residuals.push(u);
+          if (u >= 0) {
+            loss.push(tau * u);
+          } else {
+            loss.push((tau - 1) * u);
+          }
+        }
+        
+        const trace = {
+          x: residuals,
+          y: loss,
+          mode: 'lines',
+          line: { color: '#0ea5e9', width: 3 },
+          name: `Loss (τ=${tau})`
+        };
+        
+        const layout = {
+          title: `Pinball Loss Function (τ = ${tau})`,
+          paper_bgcolor: '#0f172a',
+          plot_bgcolor: '#0f172a',
+          font: { color: '#e5e7eb' },
+          xaxis: { title: 'Residual (u = y - ŷ)', gridcolor: '#1e293b' },
+          yaxis: { title: 'Loss', gridcolor: '#1e293b' },
+          margin: { t: 40, r: 20, b: 40, l: 40 }
+        };
+        
+        Plotly.newPlot('lossPlot', [trace], layout, {responsive: true});
+      }
+      
+      document.getElementById('quantileSlider').addEventListener('input', updateLossPlot);
+      updateLossPlot();
+
+      // Common Layout for Scatter Plots
+      const commonLayout = {
+        paper_bgcolor: '#0f172a',
+        plot_bgcolor: '#0f172a',
+        font: { color: '#e5e7eb' },
+        xaxis: { title: 'X', gridcolor: '#1e293b' },
+        yaxis: { title: 'y', gridcolor: '#1e293b' },
+        showlegend: true,
+        legend: { x: 0, y: 1 },
+        margin: { t: 40, r: 20, b: 40, l: 40 }
+      };
+
+      // 2. Heteroskedasticity Plot
+      function plotHetero() {
+        const n = 500;
+        const x = [];
+        const y = [];
+        
+        for(let i=0; i<n; i++) {
+          const xi = Math.random() * 10;
+          // y = 2x + x * N(0, 0.5)
+          const yi = 2 * xi + xi * jStat.normal.sample(0, 0.5);
+          x.push(xi);
+          y.push(yi);
+        }
+        
+        const traceData = {
+          x: x, y: y, mode: 'markers', type: 'scatter',
+          marker: { color: 'rgba(255, 255, 255, 0.3)', size: 4 },
+          name: 'Data'
+        };
+        
+        // Lines
+        const xLine = [0, 10];
+        // Mean: y = 2x
+        const yMean = [0, 20];
+        const traceMean = {
+          x: xLine, y: yMean, mode: 'lines',
+          line: { color: 'red', width: 3 },
+          name: 'Linear (Mean)'
+        };
+        
+        // Quantiles: y = 2x + x * Z_score * 0.5
+        // 10th: Z = -1.28
+        const y10 = [0, 20 + 10 * (-1.28) * 0.5];
+        // 90th: Z = 1.28
+        const y90 = [0, 20 + 10 * (1.28) * 0.5];
+        
+        const trace10 = {
+          x: xLine, y: y10, mode: 'lines',
+          line: { color: '#10b981', dash: 'dash', width: 2 },
+          name: '10th Percentile'
+        };
+        
+        const trace90 = {
+          x: xLine, y: y90, mode: 'lines',
+          line: { color: '#f59e0b', dash: 'dash', width: 2 },
+          name: '90th Percentile'
+        };
+
+        // Prediction Interval (approximate using true variance)
+        // PI 80%: mean +/- 1.28 * sigma * sqrt(1 + 1/n + (x-x_bar)^2 / sum((x_i-x_bar)^2))
+        // However, in this case we know the true variance structure: sigma = 0.5 * x
+        // But the notebook uses the OLS estimated residual standard error for the PI
+        // Let's replicate the OLS PI calculation properly
+        
+        let sumX=0, sumY=0, sumXY=0, sumXX=0;
+        for(let i=0; i<n; i++) {
+            sumX += x[i];
+            sumY += y[i];
+            sumXY += x[i]*y[i];
+            sumXX += x[i]*x[i];
+        }
+        const slope = (n*sumXY - sumX*sumY) / (n*sumXX - sumX*sumX);
+        const intercept = (sumY - slope*sumX) / n;
+        const meanX = sumX / n;
+        const ssx = sumXX - sumX*sumX/n; // sum((x_i - meanX)^2)
+
+        let sse = 0;
+        for(let i=0; i<n; i++) {
+            let pred = intercept + slope * x[i];
+            sse += (y[i] - pred)**2;
+        }
+        const mse = sse / (n-2);
+        const se = Math.sqrt(mse);
+        
+        const z = 1.28; // 80% (approx t-dist with large n)
+        
+        const pi_upper = [];
+        const pi_lower = [];
+        
+        for (let val of xLine) {
+            let pred = intercept + slope * val;
+            // PI formula: y_hat +/- t * se * sqrt(1 + 1/n + (x - meanX)^2 / SSX)
+            let margin = z * se * Math.sqrt(1 + 1/n + (val - meanX)**2 / ssx);
+            pi_upper.push(pred + margin);
+            pi_lower.push(pred - margin);
+        }
+
+        const tracePI = {
+            x: [...xLine, ...xLine.slice().reverse()],
+            y: [...pi_upper, ...pi_lower.slice().reverse()],
+            fill: 'toself',
+            fillcolor: 'rgba(255, 0, 0, 0.1)',
+            line: {color: 'transparent'},
+            name: 'Linear 80% PI'
+        };
+        
+        const layout = {...commonLayout, title: 'Heteroskedasticity: Variance Increases with X'};
+        Plotly.newPlot('heteroPlot', [traceData, tracePI, traceMean, trace10, trace90], layout, {responsive: true});
+      }
+      
+      // 3. Skewed Distribution Plot
+      function plotSkewed() {
+        const n = 500;
+        const x = [];
+        const y = [];
+        const meanLogNormal = Math.exp(0 + 0.8*0.8/2); // Mean of LogNormal(0, 0.8)
+        const stdLogNormal = Math.sqrt((Math.exp(0.8*0.8)-1) * Math.exp(2*0 + 0.8*0.8));
+        
+        for(let i=0; i<n; i++) {
+          const xi = Math.random() * 10;
+          // y = 2x + LogNormal(0, 0.8) - mean
+          const err = jStat.lognormal.sample(0, 0.8) - meanLogNormal;
+          const yi = 2 * xi + err;
+          x.push(xi);
+          y.push(yi);
+        }
+        
+        const traceData = {
+          x: x, y: y, mode: 'markers', type: 'scatter',
+          marker: { color: 'rgba(255, 255, 255, 0.3)', size: 4 },
+          name: 'Data'
+        };
+        
+        const xLine = [0, 10];
+        // Mean line is roughly y = 2x (since we subtracted mean)
+        const yMean = [0, 20];
+        const traceMean = {
+          x: xLine, y: yMean, mode: 'lines',
+          line: { color: 'red', width: 3 },
+          name: 'Linear (Mean)'
+        };
+        
+        // Theoretical Quantiles for LogNormal(0, 0.8)
+        // 10th: inv(0.1)
+        const q10_err = jStat.lognormal.inv(0.1, 0, 0.8) - meanLogNormal;
+        const y10 = [0 + q10_err, 20 + q10_err];
+        
+        // 90th: inv(0.9)
+        const q90_err = jStat.lognormal.inv(0.9, 0, 0.8) - meanLogNormal;
+        const y90 = [0 + q90_err, 20 + q90_err];
+        
+        const trace10 = {
+          x: xLine, y: y10, mode: 'lines',
+          line: { color: '#10b981', dash: 'dash', width: 2 },
+          name: '10th Percentile'
+        };
+        
+        const trace90 = {
+          x: xLine, y: y90, mode: 'lines',
+          line: { color: '#f59e0b', dash: 'dash', width: 2 },
+          name: '90th Percentile'
+        };
+
+        // Prediction Interval 80% (assuming normal approx for linear regression)
+        const z = 1.28;
+        const pi_upper = [];
+        const pi_lower = [];
+        for (let val of xLine) {
+            pi_upper.push(2*val + z * stdLogNormal);
+            pi_lower.push(2*val - z * stdLogNormal);
+        }
+
+        const tracePI = {
+            x: [...xLine, ...xLine.slice().reverse()],
+            y: [...pi_upper, ...pi_lower.slice().reverse()],
+            fill: 'toself',
+            fillcolor: 'rgba(255, 0, 0, 0.1)',
+            line: {color: 'transparent'},
+            name: 'Linear 80% PI'
+        };
+        
+        const layout = {...commonLayout, title: 'Skewed Errors (Log-Normal)'};
+        Plotly.newPlot('skewedPlot', [traceData, tracePI, traceMean, trace10, trace90], layout, {responsive: true});
+      }
+      
+      // 4. Cauchy Plot
+      function plotCauchy() {
+        const n = 500;
+        const x = [];
+        const y = [];
+        
+        for(let i=0; i<n; i++) {
+          const xi = Math.random() * 10;
+          // y = 2x + Cauchy * 2
+          const err = jStat.cauchy.sample(0, 1) * 2;
+          const yi = 2 * xi + err;
+          x.push(xi);
+          y.push(yi);
+        }
+        
+        const traceData = {
+          x: x, y: y, mode: 'markers', type: 'scatter',
+          marker: { color: 'rgba(255, 255, 255, 0.3)', size: 4 },
+          name: 'Data'
+        };
+        
+        // Linear Regression on Cauchy often fails (line goes wild due to outliers)
+        // We'll simulate a "bad" fit by just calculating OLS on this sample
+        let sumX=0, sumY=0, sumXY=0, sumXX=0;
+        for(let i=0; i<n; i++) {
+            sumX += x[i];
+            sumY += y[i];
+            sumXY += x[i]*y[i];
+            sumXX += x[i]*x[i];
+        }
+        const slope = (n*sumXY - sumX*sumY) / (n*sumXX - sumX*sumX);
+        const intercept = (sumY - slope*sumX) / n;
+        
+        const xLine = [0, 10];
+        const yOLS = [intercept, intercept + slope*10];
+        
+        const traceOLS = {
+          x: xLine, y: yOLS, mode: 'lines',
+          line: { color: 'red', width: 3 },
+          name: 'Linear (Sensitive to Outliers)'
+        };
+        
+        // True Median (Cauchy is symmetric, median is 0)
+        // y = 2x
+        const yMedian = [0, 20];
+        const traceMedian = {
+          x: xLine, y: yMedian, mode: 'lines',
+          line: { color: '#3b82f6', dash: 'dash', width: 3 },
+          name: 'Median (Robust)'
+        };
+
+        // Prediction Interval for Linear (Mean)
+        // Calculate residual standard error
+        let sse = 0;
+        for(let i=0; i<n; i++) {
+            let pred = intercept + slope * x[i];
+            sse += (y[i] - pred)**2;
+        }
+        const mse = sse / (n-2);
+        const se = Math.sqrt(mse);
+        
+        const z = 1.28; // 80%
+        const pi_upper = [];
+        const pi_lower = [];
+        for (let val of xLine) {
+            let pred = intercept + slope * val;
+            pi_upper.push(pred + z * se);
+            pi_lower.push(pred - z * se);
+        }
+
+        const tracePI = {
+            x: [...xLine, ...xLine.slice().reverse()],
+            y: [...pi_upper, ...pi_lower.slice().reverse()],
+            fill: 'toself',
+            fillcolor: 'rgba(255, 0, 0, 0.1)',
+            line: {color: 'transparent'},
+            name: 'Linear 80% PI'
+        };
+        
+        const layout = {
+            ...commonLayout, 
+            title: 'Heavy-Tailed (Cauchy): Linear vs Median',
+            yaxis: { title: 'y', gridcolor: '#1e293b', range: [-20, 40] } // Limit range to hide extreme outliers
+        };
+        Plotly.newPlot('cauchyPlot', [traceData, tracePI, traceOLS, traceMedian], layout, {responsive: true});
+      }
+
+      // Initialize all plots
+      plotHetero();
+      plotSkewed();
+      plotCauchy();
+    </script>
+    
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/custom.js"></script>
+  </body>
+</html>
