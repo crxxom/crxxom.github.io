@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MLE & Fisher Information - Complete Explanation</title>
+    <link rel="stylesheet" href="../css/bootstrap.min.css" />
+    <link rel="stylesheet" href="../css/unicons.css" />
+    <link rel="stylesheet" href="../css/tooplate-style.css" />
+    <!-- MathJax for LaTeX rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" defer></script>
+    <!-- Plotly for interactive graphs -->
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+
+    <style>
+      :root {
+        --accent: #0ea5e9;
+        --space-1: .75rem;
+        --space-2: 1.25rem;
+        --space-3: 2rem;
+        --code-bg: #1e1e2e;
+      }
+      body {
+        background: #0b0f19;
+        color: #e5e7eb;
+        line-height: 1.6;
+      }
+      .navbar {
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(8px);
+      }
+      .nav-link, .navbar-brand {
+        color: #e5e7eb !important;
+      }
+      .nav-link:hover {
+        color: var(--accent) !important;
+      }
+      .btn-accent {
+        background: var(--accent);
+        color: #081018;
+        border: 0;
+      }
+      .btn-accent:hover {
+        background: #0284c7;
+        color: #e5e7eb;
+      }
+      .btn {
+        padding: 0.6rem 1.1rem;
+      }
+      .btn + .btn {
+        margin-left: var(--space-1);
+      }
+      .hero {
+        padding: 7rem 0 2rem;
+      }
+      .section {
+        padding: 2rem 0;
+      }
+      .card {
+        background: #0f172a;
+        border: 1px solid #1f2937;
+        margin-bottom: 1.5rem;
+        border-radius: 0.75rem;
+      }
+      .card-header {
+        background: #1e293b;
+        border-bottom: 1px solid #334155;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        border-radius: 0.75rem 0.75rem 0 0 !important;
+      }
+      a {
+        text-decoration: none;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        color: #ffffff;
+      }
+      .math-block {
+        font-size: 1.2rem;
+        padding: 1.5rem;
+        background: #1a1f2e;
+        border-radius: 0.5rem;
+        text-align: center;
+        border-left: 4px solid var(--accent);
+        margin: 1.5rem 0;
+        overflow-x: auto;
+      }
+      .insight-card {
+        background: #1e293b;
+        border-left: 4px solid var(--accent);
+        padding: 1rem 1.5rem;
+        margin: 1rem 0;
+        border-radius: 0.5rem;
+      }
+      .katex {
+        font-size: 1.1em;
+      }
+      .katex-display {
+        margin: 0.5em 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+      .comparison-table {
+        background: #1a1f2e;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin: 1rem 0;
+      }
+      .comparison-table table {
+        width: 100%;
+        color: #e5e7eb;
+        border-collapse: collapse;
+      }
+      .comparison-table th {
+        color: var(--accent);
+        font-weight: 600;
+        padding: 0.75rem 0.5rem;
+        border-bottom: 1px solid #334155;
+        text-align: left;
+      }
+      .comparison-table td {
+        padding: 0.5rem;
+        border-bottom: 1px solid #1f2937;
+      }
+      .comparison-table tr:hover {
+        background: #2d3a4f;
+      }
+      .plot-container {
+        width: 100%;
+        height: 400px;
+        margin: 1.5rem 0;
+        background: #0f172a;
+        border-radius: 0.5rem;
+      }
+      .note {
+        color: #9ca3af;
+        font-style: italic;
+        margin-top: 0.5rem;
+      }
+      .interactive-slider {
+        margin: 1rem 0;
+        padding: 1rem;
+        background: #1a1f2e;
+        border-radius: 0.5rem;
+      }
+      .slider-container {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      .slider-label {
+        min-width: 100px;
+      }
+
+      p, li, .card-body, .insight-card p, .comparison-table td, .note {
+        color: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg fixed-top">
+      <div class="container">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="nav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="../projects.html">Projects</a></li>
+            <li class="nav-item"><a class="nav-link" href="../notebooks.html">Notebooks</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container">
+      <section class="hero">
+        <h1 class="fw-bold mb-4">MLE & Fisher Information</h1>
+        <p class="lead mb-5" style="color: #9ca3af;">
+          Understanding Maximum Likelihood Estimation and Fisher Information - the foundation of statistical inference
+          and the mathematical framework that connects data to parameter estimation.
+        </p>
+      </section>
+
+      <!-- Introduction Section -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">The Likelihood Function</h3>
+          </div>
+          <div class="card-body">
+            <p>Imagine we're tossing a coin and observe H,H,H,T,H. What's the probability of seeing heads? A common approach is to take the mean (0.8), but is this optimal for any distribution? What if there are multiple parameters?</p>
+
+            <p>Maximum Likelihood Estimation provides a general framework. The key insight is that the <strong>underlying parameter is fixed</strong> (frequentist view), so randomness comes only from data generation.</p>
+
+            <div class="math-block">
+              \[L(\theta) = \prod_{i=1}^{n} f(x_i;\theta)\]
+            </div>
+
+            <p>And the log-likelihood function:</p>
+
+            <div class="math-block">
+              \[l(\theta) = \sum_{i=1}^{n} \ln f(x_i;\theta)\]
+            </div>
+
+            <div class="insight-card">
+              <p class="mb-0">All data points are assumed to be i.i.d. (independent and identically distributed).</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Coin Tossing Example -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Coin Tossing Example</h3>
+          </div>
+          <div class="card-body">
+            <p>For Bernoulli trials (coin flips), the probability mass function is:</p>
+
+            <div class="math-block">
+              \[f(x) = \theta^{x}(1-\theta)^{1-x}\]
+            </div>
+
+            <p>The likelihood intuitively asks: "If P(Heads) = θ, what's the probability of observing our data?"</p>
+
+            <div id="bernoulli-likelihood-plot" class="plot-container"></div>
+
+            <div class="interactive-slider">
+              <div class="slider-container">
+                <span class="slider-label">Heads observed:</span>
+                <input type="range" id="heads-slider" min="0" max="10" value="1" step="1">
+                <span id="heads-value">1</span>
+                <span>/ 10 flips</span>
+              </div>
+              <div id="interactive-likelihood-plot" class="plot-container" style="height: 300px;"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Maximum Likelihood Estimation -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Maximum Likelihood Estimation</h3>
+          </div>
+          <div class="card-body">
+            <p>MLE finds the parameter that maximizes the likelihood of observing our data:</p>
+
+            <div class="math-block">
+              \[\hat{\theta}_{MLE} = \arg\max_{\theta} L(\theta)\]
+            </div>
+
+            <p>This can be found by setting the derivative to zero or using optimization algorithms. The log-likelihood is preferred because:</p>
+
+            <ul>
+              <li>Product becomes sum (easier mathematically)</li>
+              <li>Same maximum as likelihood function</li>
+              <li>Simpler derivatives</li>
+              <li>Better asymptotic properties</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Visualizing MLE -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Visualizing MLE with Normal Distribution</h3>
+          </div>
+          <div class="card-body">
+            <p>Consider estimating the mean μ of a normal distribution with known variance σ² = 4. We have 10 data points from N(μ=5, σ=2).</p>
+
+            <div id="mle-visualization-plot" class="plot-container"></div>
+
+            <div class="interactive-slider">
+              <div class="slider-container">
+                <span class="slider-label">Sample size:</span>
+                <input type="range" id="sample-size-slider" min="5" max="50" value="10" step="5">
+                <span id="sample-size-value">10</span>
+              </div>
+              <div id="mle-convergence-plot" class="plot-container" style="height: 300px;"></div>
+            </div>
+
+            <div class="insight-card">
+              <p class="mb-0">The MLE finds the parameter value that makes our observed data most probable. For normal distributions, this coincides with the sample mean.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Fisher Information -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Fisher Information</h3>
+          </div>
+          <div class="card-body">
+            <p>Fisher Information measures how much information our data carries about an unknown parameter:</p>
+
+            <div class="math-block">
+              \[I(\theta) = E\left[\left(\frac{d}{d\theta} \ln f(X;\theta)\right)^2 \bigg| \theta\right] = E\left[-\frac{d^2}{d\theta^2} \ln f(X;\theta) \bigg| \theta\right]\]
+            </div>
+
+            <p>The score function \(\frac{d}{d\theta} \ln f(X;\theta)\) indicates whether θ should be larger or smaller. Fisher Information is the variance of this score (since E[score] = 0).</p>
+
+            <div id="fisher-extremes-plot" class="plot-container"></div>
+
+            <div class="insight-card">
+              <p class="mb-0"><strong>Low Information:</strong> Flat likelihood → Fisher Information ≈ 0<br>
+              <strong>High Information:</strong> Sharp likelihood → Fisher Information → ∞</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Properties of MLE -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Properties of Maximum Likelihood Estimators</h3>
+          </div>
+          <div class="card-body">
+            <p>Under regularity conditions, MLEs have desirable asymptotic properties:</p>
+
+            <div class="comparison-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Property</th>
+                    <th>Description</th>
+                    <th>Mathematical Form</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Consistency</strong></td>
+                    <td>Converges to true parameter</td>
+                    <td>\(\hat{\theta} \xrightarrow{P} \theta\) as \(n \to \infty\)</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Asymptotic Normality</strong></td>
+                    <td>Approximately normal for large n</td>
+                    <td>\(\sqrt{n}(\hat{\theta} - \theta) \sim N(0, I^{-1}(\theta))\)</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Efficiency</strong></td>
+                    <td>Achieves minimum variance bound</td>
+                    <td>Attains Cramer-Rao Lower Bound</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cramer-Rao Lower Bound -->
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="mb-0">Cramer-Rao Lower Bound</h3>
+          </div>
+          <div class="card-body">
+            <p>The CRLB states that for any unbiased estimator \(\hat{\theta}\), the variance satisfies:</p>
+
+            <div class="math-block">
+              \[\text{Var}(\hat{\theta}) \geq \frac{1}{I_n(\theta)}\]
+            </div>
+
+            <p>where \(I_n(\theta)\) is the Fisher information for n observations. MLE achieves this bound asymptotically.</p>
+
+            <p>For Bernoulli distribution: \(I(\theta) = \frac{1}{\theta(1-\theta)}\), so \(\text{Var}(\hat{\theta}) \geq \frac{\theta(1-\theta)}{n}\).</p>
+
+            <div id="crlb-plot" class="plot-container"></div>
+          </div>
+        </div>
+      </section>
+
+      
+    </main>
+
+    <!-- Bootstrap JS not needed for this page -->
+
+    <script>
+      // Bernoulli Likelihood Plot
+      function createBernoulliPlot() {
+        const theta = [];
+        for (let i = 0.01; i <= 0.99; i += 0.01) theta.push(i);
+
+        const likelihood = theta.map(t => t);
+        const logLikelihood = theta.map(t => Math.log(t));
+
+        const trace1 = {
+          x: theta,
+          y: likelihood,
+          mode: 'lines',
+          name: 'Likelihood L(θ) = θ',
+          line: {color: '#0ea5e9', width: 3}
+        };
+
+        const trace2 = {
+          x: theta,
+          y: logLikelihood,
+          mode: 'lines',
+          name: 'Log-likelihood ℓ(θ) = log(θ)',
+          line: {color: '#ef4444', width: 3},
+          yaxis: 'y2'
+        };
+
+        const layout = {
+          title: 'Bernoulli Likelihood Functions (x=1)',
+          xaxis: {title: 'θ (probability of heads)', gridcolor: '#374151'},
+          yaxis: {title: 'L(θ)', gridcolor: '#374151'},
+          yaxis2: {
+            title: 'ℓ(θ)',
+            overlaying: 'y',
+            side: 'right',
+            gridcolor: '#374151'
+          },
+          plot_bgcolor: '#0f172a',
+          paper_bgcolor: '#0f172a',
+          font: {color: '#e5e7eb'},
+          showlegend: true,
+          legend: {x: 0.7, y: 0.9}
+        };
+
+        Plotly.newPlot('bernoulli-likelihood-plot', [trace1, trace2], layout, {responsive: true});
+      }
+
+      // Interactive Likelihood Plot
+      function createInteractiveLikelihood() {
+        const slider = document.getElementById('heads-slider');
+        const valueDisplay = document.getElementById('heads-value');
+
+        function updatePlot() {
+          const k = parseInt(slider.value);
+          valueDisplay.textContent = k;
+
+          const theta = [];
+          for (let i = 0.01; i <= 0.99; i += 0.01) theta.push(i);
+
+          const likelihood = theta.map(t => Math.pow(t, k) * Math.pow(1-t, 10-k));
+          const logLikelihood = theta.map(t => k * Math.log(t) + (10-k) * Math.log(1-t));
+
+          const trace1 = {
+            x: theta,
+            y: likelihood,
+            mode: 'lines',
+            name: 'Likelihood',
+            line: {color: '#0ea5e9', width: 3}
+          };
+
+          const trace2 = {
+            x: theta,
+            y: logLikelihood,
+            mode: 'lines',
+            name: 'Log-likelihood',
+            line: {color: '#ef4444', width: 3},
+            yaxis: 'y2'
+          };
+
+          const layout = {
+            title: `Likelihood for ${k} heads out of 10 flips`,
+            xaxis: {title: 'θ', gridcolor: '#374151'},
+            yaxis: {title: 'L(θ)', gridcolor: '#374151'},
+            yaxis2: {
+              title: 'ℓ(θ)',
+              overlaying: 'y',
+              side: 'right',
+              gridcolor: '#374151'
+            },
+            plot_bgcolor: '#0f172a',
+            paper_bgcolor: '#0f172a',
+            font: {color: '#e5e7eb'},
+            showlegend: false
+          };
+
+          Plotly.newPlot('interactive-likelihood-plot', [trace1, trace2], layout, {responsive: true});
+        }
+
+        slider.addEventListener('input', updatePlot);
+        updatePlot();
+      }
+
+      // MLE Visualization Plot
+      function createMLEVisualization() {
+        // Generate sample data
+        const trueMu = 5;
+        const sigma = 2;
+        const n = 10;
+        const data = [];
+        for (let i = 0; i < n; i++) {
+          data.push(trueMu + sigma * (Math.random() + Math.random() + Math.random() + Math.random() + Math.random() + Math.random() - 3));
+        }
+
+        const muRange = [];
+        for (let i = 0; i <= 10; i += 0.1) muRange.push(i);
+
+        const logLikelihoods = data.map(x =>
+          muRange.map(mu => -((x - mu) ** 2) / (2 * sigma ** 2))
+        );
+
+        const jointLogLikelihood = muRange.map((mu, i) =>
+          logLikelihoods.reduce((sum, ll) => sum + ll[i], 0)
+        );
+
+        const mleIndex = jointLogLikelihood.indexOf(Math.max(...jointLogLikelihood));
+        const mleMu = muRange[mleIndex];
+
+        const traces = data.slice(0, 5).map((x, i) => ({
+          x: muRange,
+          y: logLikelihoods[i],
+          mode: 'lines',
+          name: `Point ${i+1}: x=${x.toFixed(2)}`,
+          line: {width: 2},
+          opacity: 0.7
+        }));
+
+        traces.push({
+          x: muRange,
+          y: jointLogLikelihood,
+          mode: 'lines',
+          name: 'Joint log-likelihood',
+          line: {color: '#0ea5e9', width: 4}
+        });
+
+        const layout = {
+          title: 'Individual vs Joint Log-Likelihoods',
+          xaxis: {title: 'μ (mean parameter)', gridcolor: '#374151'},
+          yaxis: {title: 'Log-likelihood', gridcolor: '#374151'},
+          plot_bgcolor: '#0f172a',
+          paper_bgcolor: '#0f172a',
+          font: {color: '#e5e7eb'},
+          shapes: [
+            {type: 'line', x0: trueMu, x1: trueMu, y0: Math.min(...jointLogLikelihood), y1: Math.max(...jointLogLikelihood),
+             line: {color: 'red', dash: 'dash'}},
+            {type: 'line', x0: mleMu, x1: mleMu, y0: Math.min(...jointLogLikelihood), y1: Math.max(...jointLogLikelihood),
+             line: {color: 'green', dash: 'dash'}}
+          ],
+          annotations: [
+            {x: trueMu, y: Math.max(...jointLogLikelihood), text: 'True μ=5', showarrow: true, arrowhead: 2, ax: 0, ay: -40},
+            {x: mleMu, y: Math.max(...jointLogLikelihood), text: `MLE μ=${mleMu.toFixed(2)}`, showarrow: true, arrowhead: 2, ax: 0, ay: -60}
+          ]
+        };
+
+        Plotly.newPlot('mle-visualization-plot', traces, layout, {responsive: true});
+      }
+
+      // Interactive MLE Convergence Plot
+      function createMLEConvergencePlot(n) {
+        const trueMu = 5;
+        const sigma = 2;
+        const data = [];
+        for (let i = 0; i < n; i++) {
+          data.push(trueMu + sigma * (Math.random() + Math.random() + Math.random() + Math.random() + Math.random() + Math.random() - 3));
+        }
+
+        const sampleMean = data.reduce((sum, x) => sum + x, 0) / n;
+        const muRange = [];
+        for (let i = 2; i <= 8; i += 0.1) muRange.push(i);
+
+        const logLikelihood = muRange.map(mu =>
+          data.reduce((sum, x) => sum - ((x - mu) ** 2) / (2 * sigma ** 2), 0)
+        );
+
+        const trace = {
+          x: muRange,
+          y: logLikelihood,
+          mode: 'lines',
+          name: 'Log-likelihood',
+          line: {color: '#0ea5e9', width: 3}
+        };
+
+        const layout = {
+          title: `MLE Convergence (n=${n})`,
+          xaxis: {title: 'μ (mean parameter)', gridcolor: '#374151'},
+          yaxis: {title: 'Log-likelihood', gridcolor: '#374151'},
+          plot_bgcolor: '#0f172a',
+          paper_bgcolor: '#0f172a',
+          font: {color: '#e5e7eb'},
+          shapes: [
+            {type: 'line', x0: trueMu, x1: trueMu, y0: Math.min(...logLikelihood), y1: Math.max(...logLikelihood),
+             line: {color: 'red', dash: 'dash'}},
+            {type: 'line', x0: sampleMean, x1: sampleMean, y0: Math.min(...logLikelihood), y1: Math.max(...logLikelihood),
+             line: {color: 'green', dash: 'dash'}}
+          ],
+          annotations: [
+            {x: trueMu, y: Math.max(...logLikelihood) * 0.9, text: 'True μ=5', showarrow: true, arrowhead: 2, ax: 0, ay: -20},
+            {x: sampleMean, y: Math.max(...logLikelihood) * 0.8, text: `MLE μ=${sampleMean.toFixed(2)}`, showarrow: true, arrowhead: 2, ax: 0, ay: -20}
+          ]
+        };
+
+        Plotly.newPlot('mle-convergence-plot', [trace], layout, {responsive: true});
+      }
+
+      // Fisher Information Extremes
+      function createFisherExtremes() {
+        const theta = [];
+        for (let i = -3; i <= 3; i += 0.1) theta.push(i);
+
+        const trace1 = {
+          x: theta,
+          y: theta.map(() => 1),
+          mode: 'lines',
+          name: 'Low Information (Flat likelihood)',
+          line: {color: '#ef4444', width: 4}
+        };
+
+        // High information: vertical line at θ=0
+        const trace2 = {
+          x: theta.map(() => 0),
+          y: theta,
+          mode: 'lines',
+          name: 'High Information (Sharp likelihood)',
+          line: {color: '#22c55e', width: 4}
+        };
+
+        const layout = {
+          title: 'Fisher Information Extremes',
+          xaxis: {title: 'θ (parameter)', gridcolor: '#374151'},
+          yaxis: {title: 'L(θ)', gridcolor: '#374151'},
+          plot_bgcolor: '#0f172a',
+          paper_bgcolor: '#0f172a',
+          font: {color: '#e5e7eb'},
+          showlegend: true,
+          annotations: [
+            {x: -2, y: 1.2, text: 'Fisher Info ≈ 0', showarrow: false},
+            {x: 0.5, y: 0, text: 'Fisher Info → ∞', showarrow: false}
+          ]
+        };
+
+        Plotly.newPlot('fisher-extremes-plot', [trace1, trace2], layout, {responsive: true});
+      }
+
+      // CRLB Plot
+      function createCRLBPlot() {
+        const theta = [];
+        for (let i = 0.01; i <= 0.99; i += 0.01) theta.push(i);
+
+        const n_values = [10, 50, 100];
+        const traces = n_values.map(n => ({
+          x: theta,
+          y: theta.map(t => t * (1 - t) / n),
+          mode: 'lines',
+          name: `n=${n}`,
+          line: {width: 3}
+        }));
+
+        const layout = {
+          title: 'Cramer-Rao Lower Bound for Bernoulli',
+          xaxis: {title: 'θ', gridcolor: '#374151'},
+          yaxis: {title: 'Minimum Variance', gridcolor: '#374151'},
+          plot_bgcolor: '#0f172a',
+          paper_bgcolor: '#0f172a',
+          font: {color: '#e5e7eb'},
+          showlegend: true
+        };
+
+        Plotly.newPlot('crlb-plot', traces, layout, {responsive: true});
+      }
+
+      // (MLE Convergence functionality removed)
+
+      // Initialize all plots
+      createBernoulliPlot();
+      createInteractiveLikelihood();
+      createMLEVisualization();
+      createMLEConvergencePlot(10); // Initialize with n=10
+      createFisherExtremes();
+      createCRLBPlot();
+
+      // Interactive MLE convergence slider
+      const sampleSizeSlider = document.getElementById('sample-size-slider');
+      const sampleSizeValue = document.getElementById('sample-size-value');
+
+      sampleSizeSlider.addEventListener('input', function() {
+        const n = parseInt(this.value);
+        sampleSizeValue.textContent = n;
+        createMLEConvergencePlot(n);
+      });
+
+      // Convergence slider removed (MLE Convergence section deleted)
+    </script>
+  </body>
+</html></content>
+<parameter name="filePath">/Users/jadonng/Desktop/Computer_Science/0 Project Portfolio Website/crxxom.github.io/notebooks/fisher_information.html
